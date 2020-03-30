@@ -1,0 +1,15 @@
+packages:
+   possibly-can-core
+ , possibly-can-lens
+ , possibly-can-microlens
+
+
+tests: True
+optimization: False
+
+-- haskell-tng
+--
+flags: +ghc-flags +perf-flags
+
+-- :^)
+write-ghc-environment-files: always
