@@ -1,1 +1,1 @@
-# possibly-can: pointed variations of `These`
+# Smash: Smash products in Hask
