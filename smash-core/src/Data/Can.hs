@@ -3,28 +3,28 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
-module Data.Smash
+module Data.Can
 ( -- * Datatypes
-  Smash(..)
+  Can(..)
   -- * Combinators
   -- ** Curry & Uncurry
   -- ** Eliminators
-, smash
-, fromSmash
-, joinSmash
+, can
+, fromCan
+, joinCan
 , joinWith
   -- ** Partitioning
 , partition
 , partitionAll
 , partitionEithers
   -- ** Distributivity
-, distributeSmash
-, codistributeSmash
+, distributeCan
+, codistributeCan
   -- ** Associativity
 , reassocLR
 , reassocRL
   -- ** Symmetry
-, swapSmash
+, swapCan
 ) where
 
 
@@ -40,30 +40,36 @@ import Data.Typeable
 import GHC.Generics
 
 
--- | The 'Smash' data type represents values with two non-exclusive
+-- | The 'Can' data type represents values with two non-exclusive
 -- possibilities, as well as an empty case
 --
 --
-data Smash a b = Non | One a | Eno b | Two a b
+data Can a b = Non | One a | Eno b | Two a b
   deriving
     ( Eq, Ord, Read, Show
     , Generic, Generic1
     , Typeable, Data
     )
 
+data Smash a b = Nada | Smashed a b
+  deriving
+    ( Eq, Ord, Read, Show
+    , Generic, Generic1
+    , Typeable, Data
+    )
 
 -- -------------------------------------------------------------------- --
 -- Curry & Uncurry
 
-smashCurry :: (Smash a b -> Maybe c) -> Maybe a -> Maybe b -> Maybe c
-smashCurry k ma mb = case (ma, mb) of
+canCurry :: (Can a b -> Maybe c) -> Maybe a -> Maybe b -> Maybe c
+canCurry k ma mb = case (ma, mb) of
     (Nothing, Nothing) -> k Non
     (Just a, Nothing) -> k (One a)
     (Nothing, Just b) -> k (Eno b)
     (Just a, Just b) -> k (Two a b)
 
-smashUncurry :: (Maybe a -> Maybe b -> Maybe c) -> Smash a b -> Maybe c
-smashUncurry k = \case
+canUncurry :: (Maybe a -> Maybe b -> Maybe c) -> Can a b -> Maybe c
+canUncurry k = \case
     Non -> k Nothing Nothing
     One a -> k (Just a) Nothing
     Eno b -> k Nothing (Just b)
@@ -72,9 +78,9 @@ smashUncurry k = \case
 -- -------------------------------------------------------------------- --
 -- Eliminators
 
--- | Case eliminator for the 'Smash' datatype
+-- | Case elimination for the 'Can' datatype
 --
-smash
+can
     :: c
       -- ^ default value to supply for the 'Non' case
     -> (a -> c)
@@ -83,25 +89,25 @@ smash
       -- ^ eliminator for the 'Eno' case
     -> (a -> b -> c)
       -- ^ eliminator for the 'Two' case
-    -> Smash a b
+    -> Can a b
     -> c
-smash c _ _ _ Non = c
-smash _ f _ _ (One a) = f a
-smash _ _ g _ (Eno b) = g b
-smash _ _ _ h (Two a b) = h a b
+can c _ _ _ Non = c
+can _ f _ _ (One a) = f a
+can _ _ g _ (Eno b) = g b
+can _ _ _ h (Two a b) = h a b
 
 -- | Given two default values, create a 'Maybe' value containing
 -- either nothing, or just a tuple.
 --
-fromSmash :: a -> b -> Smash a b -> Maybe (a,b)
-fromSmash a b = smash Nothing (Just . (,b)) (Just . (a,)) (\c d -> Just (c,d))
+fromCan :: a -> b -> Can a b -> Maybe (a,b)
+fromCan a b = can Nothing (Just . (,b)) (Just . (a,)) (\c d -> Just (c,d))
 
--- | Merge the values of a 'Smash', using some default value as a local unit.
+-- | Merge the values of a 'Can', using some default value as a local unit.
 --
-joinSmash :: a -> (a -> a -> a) -> Smash a a -> a
-joinSmash a k = smash a (k a) (k a) k
+joinCan :: a -> (a -> a -> a) -> Can a a -> a
+joinCan a k = can a (k a) (k a) k
 
--- | Merge the values of a 'Smash', using some default value as a local unit,
+-- | Merge the values of a 'Can', using some default value as a local unit,
 -- providing a conversion to 'bimap' with before merging.
 --
 joinWith
@@ -109,27 +115,32 @@ joinWith
     -> (a -> c)
     -> (b -> c)
     -> (c -> c -> c)
-    -> Smash a b
+    -> Can a b
     -> c
-joinWith c f g k = joinSmash c k . bimap f g
+joinWith c f g k = joinCan c k . bimap f g
+
+-- | Smash product of two 'Can' datatypes
+--
+smash :: Can a b -> Maybe (a, b)
+smash = can Nothing (const Nothing) (const Nothing) (\a b -> Just (a,b))
 
 -- -------------------------------------------------------------------- --
 -- Partitioning
 
--- | Partition a list of 'Smash' values into a triple of lists of
+-- | Partition a list of 'Can' values into a triple of lists of
 -- all of their constituent parts
 --
-partitionAll :: [Smash a b] -> ([a], [b], [(a,b)])
+partitionAll :: [Can a b] -> ([a], [b], [(a,b)])
 partitionAll = flip foldr mempty $ \a ~(as, bs, cs) -> case a of
     Non -> (as, bs, cs)
     One a -> (a:as, bs, cs)
     Eno b -> (as, b:bs, cs)
     Two a b -> (as, bs, (a,b):cs)
 
--- | Partition a list of 'Smash' values into a tuple of lists of
+-- | Partition a list of 'Can' values into a tuple of lists of
 -- their parts.
 --
-partition :: [Smash a b] -> ([a], [b])
+partition :: [Can a b] -> ([a], [b])
 partition = flip foldr mempty $ \a ~(as, bs) -> case a of
     Non -> (as, bs)
     One a -> (a:as, bs)
@@ -137,10 +148,10 @@ partition = flip foldr mempty $ \a ~(as, bs) -> case a of
     Two a b -> (a:as, b:bs)
 
 -- | Partition a list of 'Either' values, separating them into
--- a 'Smash' value of lists of left and right values, or 'Non' in the
+-- a 'Can' value of lists of left and right values, or 'Non' in the
 -- case of an empty list.
 --
-partitionEithers :: [Either a b] -> Smash [a] [b]
+partitionEithers :: [Either a b] -> Can [a] [b]
 partitionEithers = go . E.partitionEithers
   where
     go ([], []) = Non
@@ -151,19 +162,19 @@ partitionEithers = go . E.partitionEithers
 -- -------------------------------------------------------------------- --
 -- Distributivity
 
--- | Distribute a 'Smash' value over a product.
+-- | Distribute a 'Can' value over a product.
 --
-distributeSmash :: Smash (a,b) c -> (Smash a c, Smash b c)
-distributeSmash = \case
+distributeCan :: Can (a,b) c -> (Can a c, Can b c)
+distributeCan = \case
     Non -> (Non, Non)
     One (a,b) -> (One a, One b)
     Eno c -> (Eno c, Eno c)
     Two (a,b) c -> (Two a c, Two b c)
 
--- | Codistribute a coproduct over a 'Smash' value.
+-- | Codistribute a coproduct over a 'Can' value.
 --
-codistributeSmash :: Either (Smash a c) (Smash b c) -> Smash (Either a b) c
-codistributeSmash = \case
+codistributeCan :: Either (Can a c) (Can b c) -> Can (Either a b) c
+codistributeCan = \case
     Left ac -> case ac of
       Non -> Non
       One a -> One (Left a)
@@ -178,31 +189,31 @@ codistributeSmash = \case
 -- -------------------------------------------------------------------- --
 -- Associativity
 
-reassocLR :: Smash (Smash a b) c -> Smash a (Smash b c)
+reassocLR :: Can (Can a b) c -> Can a (Can b c)
 reassocLR = \case
     Non -> Non
-    One smash -> case smash of
+    One can -> case can of
       Non -> Eno Non
       One a -> One a
       Eno b -> Eno (One b)
       Two a b -> Two a (One b)
     Eno c -> Eno (Eno c)
-    Two smash c -> case smash of
+    Two can c -> case can of
       Non -> Eno (Eno c)
       One a -> Two a (Eno c)
       Eno b -> Eno (Two b c)
       Two a b -> Two a (Two b c)
 
-reassocRL :: Smash a (Smash b c) -> Smash (Smash a b) c
+reassocRL :: Can a (Can b c) -> Can (Can a b) c
 reassocRL = \case
     Non -> Non
     One a -> One (One a)
-    Eno smash -> case smash of
+    Eno can -> case can of
       Non -> One Non
       One b -> One (Eno b)
       Eno c -> Eno c
       Two b c -> Two (Eno b) c
-    Two a smash -> case smash of
+    Two a can -> case can of
       Non -> One (One a)
       One b -> One (Two a b)
       Eno c -> Two (One a) c
@@ -211,8 +222,8 @@ reassocRL = \case
 -- -------------------------------------------------------------------- --
 -- Symmetry
 
-swapSmash :: Smash a b -> Smash b a
-swapSmash = \case
+swapCan :: Can a b -> Can b a
+swapCan = \case
     Non -> Non
     One a -> Eno a
     Eno b -> One b
@@ -222,9 +233,9 @@ swapSmash = \case
 -- Std instances
 
 
-instance (Hashable a, Hashable b) => Hashable (Smash a b)
+instance (Hashable a, Hashable b) => Hashable (Can a b)
 
-instance Semigroup a => Applicative (Smash a) where
+instance Semigroup a => Applicative (Can a) where
   pure = Eno
 
   _ <*> Non = Non
@@ -237,7 +248,7 @@ instance Semigroup a => Applicative (Smash a) where
   Two a f <*> Eno b = Two a (f b)
   Two a f <*> Two b c = Two (a <> b) (f c)
 
-instance Semigroup a => Monad (Smash a) where
+instance Semigroup a => Monad (Can a) where
   return = pure
 
   Non >>= _ = Non
@@ -251,7 +262,7 @@ instance Semigroup a => Monad (Smash a) where
 
   (>>) = (*>)
 
-instance (Semigroup a, Semigroup b) => Semigroup (Smash a b) where
+instance (Semigroup a, Semigroup b) => Semigroup (Can a b) where
   Non <> b = b
   b <> Non = b
   One a <> One b = One (a <> b)
@@ -265,22 +276,22 @@ instance (Semigroup a, Semigroup b) => Semigroup (Smash a b) where
   Two a b <> Eno c = Two a (b <> c)
 
 
-instance (Semigroup a, Semigroup b) => Monoid (Smash a b) where
+instance (Semigroup a, Semigroup b) => Monoid (Can a b) where
   mempty = Non
   mappend = (<>)
 
-instance Functor (Smash a) where
+instance Functor (Can a) where
   fmap _ Non = Non
   fmap _ (One a) = One a
   fmap f (Eno b) = Eno (f b)
   fmap f (Two a b) = Two a (f b)
 
-instance Foldable (Smash a) where
+instance Foldable (Can a) where
   foldMap k (Eno b) = k b
   foldMap k (Two a b) = k b
   foldMap _ _ = mempty
 
-instance Traversable (Smash a) where
+instance Traversable (Can a) where
   traverse k = \case
     Non -> pure Non
     One a -> pure (One a)
@@ -290,21 +301,21 @@ instance Traversable (Smash a) where
 -- -------------------------------------------------------------------- --
 -- Bifunctors
 
-instance Bifunctor Smash where
+instance Bifunctor Can where
   bimap f g = \case
     Non -> Non
     One a -> One (f a)
     Eno b -> Eno (g b)
     Two a b -> Two (f a) (g b)
 
-instance Bifoldable Smash where
+instance Bifoldable Can where
   bifoldMap f g = \case
     Non -> mempty
     One a -> f a
     Eno b -> g b
     Two a b -> f a <> g b
 
-instance Bitraversable Smash where
+instance Bitraversable Can where
   bitraverse f g = \case
     Non -> pure Non
     One a -> One <$> f a
