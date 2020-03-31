@@ -14,7 +14,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Emily Pillmore
 maintainer:          emilypi@cohomolo.gy
-copyright:           (c) 2020 Emily Pillmore
+copyright:           (c) 2020 Emily Pillmore <emilypi@cohomolo.gy>
 category:            Data
 build-type:          Simple
 extra-source-files:

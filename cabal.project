@@ -1,7 +1,7 @@
 packages:
-   possibly-can-core
- , possibly-can-lens
- , possibly-can-microlens
+   smash-core
+ , smash-lens
+ , smash-microlens
 
 
 tests: True
