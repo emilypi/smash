@@ -4,17 +4,31 @@ cabal-version:       2.0
 name:                smash
 version:             0.1.0.0
 synopsis:            Smash products - like 'These', but with a unit!
--- description:
-homepage:            https://github.com/emilypi/possibly-can
--- bug-reports:
+description:
+  Smash products are like the 'These' datatype, only with a unit. You can
+  think of this type as isomorphic to 'Maybe (These a b)'.
+
+homepage:            https://github.com/emilypi/smash
+bug-reports:         https://github.com/emilypi/smash/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Emily Pillmore
 maintainer:          emilypi@cohomolo.gy
--- copyright:
+copyright:           (c) 2020 Emily Pillmore
 category:            Data
 build-type:          Simple
-extra-source-files:  CHANGELOG.md
+extra-source-files:
+  CHANGELOG.md
+  README.md
+
+tested-with:
+  GHC ==8.2.2 || ==8.4.3 || ==8.4.4 || ==8.6.3 || ==8.6.5 || ==8.8.3
+
+
+source-repository head
+  type:     git
+  location: https://github.com/emilypi/smash.git
+
 
 library
   exposed-modules:     Data.Smash
