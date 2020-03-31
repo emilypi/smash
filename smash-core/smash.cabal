@@ -1,0 +1,36 @@
+cabal-version:       2.0
+
+
+name:                smash
+version:             0.1.0.0
+synopsis:            Smash products - like 'These', but with a unit!
+-- description:
+homepage:            https://github.com/emilypi/possibly-can
+-- bug-reports:
+license:             BSD3
+license-file:        LICENSE
+author:              Emily Pillmore
+maintainer:          emilypi@cohomolo.gy
+-- copyright:
+category:            Data
+build-type:          Simple
+extra-source-files:  CHANGELOG.md
+
+library
+  exposed-modules:     Data.Smash
+  -- other-modules:
+  -- other-extensions:
+  build-depends:       base ^>=4.13.0.0
+                     , bifunctors
+                     , hashable
+
+
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+
+test-suite possibly-can-test
+  default-language:    Haskell2010
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             MyLibTest.hs
+  build-depends:       base ^>=4.13.0.0
