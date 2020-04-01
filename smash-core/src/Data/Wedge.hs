@@ -8,6 +8,8 @@ module Data.Wedge
   Wedge(..)
   -- * Combinators
 , quotWedge
+, wedgeLeft
+, wedgeRight
   -- ** Eliminators
 , wedge
   -- ** Distributivity
@@ -45,6 +47,14 @@ data Wedge a b = Nowhere | Here a | There b
 quotWedge :: Either (Maybe a) (Maybe b) -> Wedge a b
 quotWedge (Left a) = maybe Nowhere Here a
 quotWedge (Right b) = maybe Nowhere There b
+
+wedgeLeft :: Maybe a -> Wedge a b
+wedgeLeft Nothing = Nowhere
+wedgeLeft (Just a) = Here a
+
+wedgeRight :: Maybe b -> Wedge a b
+wedgeRight Nothing = Nowhere
+wedgeRight (Just b) = There b
 
 -- -------------------------------------------------------------------- --
 -- Eliminators

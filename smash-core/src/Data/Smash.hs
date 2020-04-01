@@ -6,6 +6,8 @@
 module Data.Smash
 ( Smash(..)
 , smash
+, smashFst
+, smashSnd
 , smashProduct
 , smashProduct'
 ) where
@@ -16,7 +18,6 @@ import Data.Bifoldable
 import Data.Bitraversable
 import Data.Can
 import Data.Data
-import qualified Data.Either as E
 import Data.Hashable
 import Data.Wedge
 
@@ -44,6 +45,14 @@ smashProduct' a b = \case
   Nowhere -> Nada
   Here c -> Smash c b
   There d -> Smash a d
+
+smashFst :: Smash a b -> Maybe a
+smashFst Nada = Nothing
+smashFst (Smash a _) = Just a
+
+smashSnd :: Smash a b -> Maybe b
+smashSnd Nada = Nothing
+smashSnd (Smash _ b) = Just b
 
 -- -------------------------------------------------------------------- --
 -- Std instances

@@ -10,6 +10,8 @@ module Data.Can
 , fromCan
 , joinCan
 , joinWith
+, canFst
+, canSnd
   -- ** Curry & Uncurry
 , canCurry
 , canUncurry
@@ -79,6 +81,18 @@ joinWith
     -> Can a b
     -> c
 joinWith c f g k = joinCan c k . bimap f g
+
+canFst :: Can a b -> Maybe a
+canFst = \case
+  One a -> Just a
+  Two a _ -> Just a
+  _ -> Nothing
+
+canSnd :: Can a b -> Maybe b
+canSnd = \case
+  Eno b -> Just b
+  Two _ b -> Just b
+  _ -> Nothing
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
