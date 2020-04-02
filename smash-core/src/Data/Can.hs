@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE RankNTypes #-}
 module Data.Can
 ( -- * Datatypes
   Can(..)
@@ -15,7 +16,12 @@ module Data.Can
 , isNon
   -- ** Eliminators
 , can
-  -- ** Filtering
+  -- * Folding
+, foldOnes
+, foldEnos
+, foldTwos
+, gatherCans
+  -- * Filtering
 , ones
 , enos
 , twos
@@ -23,25 +29,20 @@ module Data.Can
 , filterEnos
 , filterTwos
 , filterNons
-  -- ** Folding
-, foldOnes
-, foldEnos
-, foldTwos
-, gatherCans
-  -- ** Curry & Uncurry
+  -- * Curry & Uncurry
 , canCurry
 , canUncurry
-  -- ** Partitioning
+  -- * Partitioning
 , partitionCan
 , partitionAll
 , partitionEithers
-  -- ** Distributivity
+  -- * Distributivity
 , distributeCan
 , codistributeCan
-  -- ** Associativity
+  -- * Associativity
 , reassocLR
 , reassocRL
-  -- ** Symmetry
+  -- * Symmetry
 , swapCan
 ) where
 

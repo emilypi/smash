@@ -14,6 +14,8 @@ module Data.Smash
 , smashProduct'
 , smashCurry
 , smashUncurry
+, distributeSmash
+, distributeSmash'
 ) where
 
 
@@ -64,6 +66,9 @@ fromSmash (Smash a b) = Just (a,b)
 smashProduct :: Can a b -> Smash a b
 smashProduct = can Nada (const Nada) (const Nada) Smash
 
+-- | Take the smash product of a wedge and two default values
+-- to place in either the left or right side of the final product
+--
 smashProduct' :: a -> b -> Wedge a b -> Smash a b
 smashProduct' a b = \case
   Nowhere -> Nada
@@ -96,13 +101,39 @@ smash _ f (Smash a b) = f a b
 -- -------------------------------------------------------------------- --
 -- Currying & Uncurrying
 
+-- | "Curry" a map from a smash product to a pointed type. This is analogous
+-- to 'curry' for '(->)'.
+--
 smashCurry :: (Smash a b -> Maybe c) -> Maybe a -> Maybe b -> Maybe c
 smashCurry f (Just a) (Just b) = f (Smash a b)
 smashCurry _ _ _ = Nothing
 
+-- | "Uncurry" a map of pointed types to a map of a smash product to a pointed type.
+-- This is analogous to 'uncurry' for '(->)'.
+--
 smashUncurry :: (Maybe a -> Maybe b -> Maybe c) -> Smash a b -> Maybe c
 smashUncurry _ Nada = Nothing
 smashUncurry f (Smash a b) = f (Just a) (Just b)
+
+-- -------------------------------------------------------------------- --
+-- Distributivity
+
+
+-- | A smash product of wedges is a wedge of smash products.
+-- Smash products distribute over coproducts ('Wedge's) in pointed Hask
+--
+distributeSmash ::  Smash (Wedge a b) c -> Wedge (Smash a c) (Smash b c)
+distributeSmash Nada = Nowhere
+distributeSmash (Smash (Here a) c) = Here (Smash a c)
+distributeSmash (Smash (There b) c) = There (Smash b c)
+
+-- | A wedge of smash products is a smash product of wedges.
+-- Smash products distribute over coproducts ('Wedge's) in pointed Hask
+--
+distributeSmash' :: Wedge (Smash a c) (Smash b c) -> Smash (Wedge a b) c
+distributeSmash' (Here (Smash a c)) = Smash (Here a) c
+distributeSmash' (There (Smash b c)) = Smash (There b) c
+distributeSmash' _ = Nada
 
 -- -------------------------------------------------------------------- --
 -- Std instances
