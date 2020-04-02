@@ -7,18 +7,35 @@ module Data.Can
 ( -- * Datatypes
   Can(..)
   -- * Combinators
+  -- ** Eliminators
+, can
+  -- ** General
 , fromCan
-, joinCan
-, joinWith
+, toCan
 , canFst
 , canSnd
+, isOne
+, isEno
+, isTwo
+, isNon
+  -- ** Filtering
+, ones
+, enos
+, twos
+, filterOnes
+, filterEnos
+, filterTwos
+, filterNons
+  -- ** Folding
+, foldOnes
+, foldEnos
+, foldTwos
+, gatherCans
   -- ** Curry & Uncurry
 , canCurry
 , canUncurry
-  -- ** Eliminators
-, can
   -- ** Partitioning
-, partition
+, partitionCan
 , partitionAll
 , partitionEithers
   -- ** Distributivity
@@ -29,8 +46,6 @@ module Data.Can
 , reassocRL
   -- ** Symmetry
 , swapCan
-  -- ** Pairing & Unpairing
-, pairCan
 ) where
 
 
@@ -40,14 +55,15 @@ import Data.Bitraversable
 import Data.Data
 import qualified Data.Either as E
 import Data.Hashable
-import Data.Wedge (Wedge(..))
+import Data.These (These(..))
 
 import GHC.Generics
 
 
 -- | The 'Can' data type represents values with two non-exclusive
--- possibilities, as well as an empty case
---
+-- possibilities, as well as an empty case. This is a product of pointed types -
+-- i.e. of 'Maybe' values. The result is a type, 'Can a b', which is isomorphic
+-- to 'Maybe (These a b)'.
 --
 data Can a b = Non | One a | Eno b | Two a b
   deriving
@@ -55,44 +71,6 @@ data Can a b = Non | One a | Eno b | Two a b
     , Generic, Generic1
     , Typeable, Data
     )
-
--- -------------------------------------------------------------------- --
--- Combinators
-
--- | Given two default values, create a 'Maybe' value containing
--- either nothing, or just a tuple.
---
-fromCan :: a -> b -> Can a b -> Maybe (a,b)
-fromCan a b = can Nothing (Just . (,b)) (Just . (a,)) (\c d -> Just (c,d))
-
--- | Merge the values of a 'Can', using some default value as a local unit.
---
-joinCan :: a -> (a -> a -> a) -> Can a a -> a
-joinCan a k = can a (k a) (k a) k
-
--- | Merge the values of a 'Can', using some default value as a local unit,
--- providing a conversion to 'bimap' with before merging.
---
-joinWith
-    :: c
-    -> (a -> c)
-    -> (b -> c)
-    -> (c -> c -> c)
-    -> Can a b
-    -> c
-joinWith c f g k = joinCan c k . bimap f g
-
-canFst :: Can a b -> Maybe a
-canFst = \case
-  One a -> Just a
-  Two a _ -> Just a
-  _ -> Nothing
-
-canSnd :: Can a b -> Maybe b
-canSnd = \case
-  Eno b -> Just b
-  Two _ b -> Just b
-  _ -> Nothing
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
@@ -116,14 +94,175 @@ can _ _ g _ (Eno b) = g b
 can _ _ _ h (Two a b) = h a b
 
 -- -------------------------------------------------------------------- --
+-- Combinators
+
+-- | Create a 'Maybe (These a b)' value from a 'Can' value.
+--
+fromCan :: Can a b -> Maybe (These a b)
+fromCan Non = Nothing
+fromCan (One a) = Just (This a)
+fromCan (Eno b) = Just (That b)
+fromCan (Two a b) = Just (These a b)
+
+-- | Create a 'Can' value from a 'Maybe (These a b)' value.
+--
+toCan :: Maybe (These a b) -> Can a b
+toCan Nothing = Non
+toCan (Just (This a)) = One a
+toCan (Just (That b)) = Eno b
+toCan (Just (These a b)) = Two a b
+
+-- | Project the left value of a 'Can' datatype. This is analogous
+-- to 'fst' for '(,)'.
+--
+canFst :: Can a b -> Maybe a
+canFst = \case
+  One a -> Just a
+  Two a _ -> Just a
+  _ -> Nothing
+
+-- | Project the right value of a 'Can' datatype. This is analogous
+-- to 'snd' for '(,)'.
+--
+canSnd :: Can a b -> Maybe b
+canSnd = \case
+  Eno b -> Just b
+  Two _ b -> Just b
+  _ -> Nothing
+
+-- | Detect if a 'Can' is a 'One' case.
+--
+isOne :: Can a b -> Bool
+isOne (One _) = True
+isOne _ = False
+
+-- | Detect if a 'Can' is a 'Eno' case.
+--
+isEno :: Can a b -> Bool
+isEno (Eno _) = True
+isEno _ = False
+
+-- | Detect if a 'Can' is a 'Two' case.
+--
+isTwo :: Can a b -> Bool
+isTwo (Two _ _) = True
+isTwo _ = False
+
+-- | Detect if a 'Can' is a 'Non' case.
+--
+isNon :: Can a b -> Bool
+isNon Non = True
+isNon _ = False
+
+-- -------------------------------------------------------------------- --
+-- Filtering
+
+-- | Given a 'Foldable' of 'Can's, collect the 'One' cases, if any.
+--
+ones :: Foldable f => f (Can a b) -> [a]
+ones = foldr go []
+  where
+    go (One a) acc = a:acc
+    go _ acc = acc
+
+-- | Given a 'Foldable' of 'Can's, collect the 'Eno' cases, if any.
+--
+enos :: Foldable f => f (Can a b) -> [b]
+enos = foldr go []
+  where
+    go (Eno a) acc = a:acc
+    go _ acc = acc
+
+-- | Given a 'Foldable' of 'Can's, collect the 'Two' cases, if any.
+--
+twos :: Foldable f => f (Can a b) -> [(a,b)]
+twos = foldr go []
+  where
+    go (Two a b) acc = (a,b):acc
+    go _ acc = acc
+
+-- | Filter the 'One' cases of a 'Foldable' of 'Can' values.
+--
+filterOnes :: Foldable f => f (Can a b) -> [Can a b]
+filterOnes = foldr go []
+  where
+    go (One _) acc = acc
+    go t acc = t:acc
+
+-- | Filter the 'Eno' cases of a 'Foldable' of 'Can' values.
+--
+filterEnos :: Foldable f => f (Can a b) -> [Can a b]
+filterEnos = foldr go []
+  where
+    go (Eno _) acc = acc
+    go t acc = t:acc
+
+-- | Filter the 'Two' cases of a 'Foldable' of 'Can' values.
+--
+filterTwos :: Foldable f => f (Can a b) -> [Can a b]
+filterTwos = foldr go []
+  where
+    go (Two _ _) acc = acc
+    go t acc = t:acc
+
+-- | Filter the 'Non' cases of a 'Foldable' of 'Can' values.
+--
+filterNons :: Foldable f => f (Can a b) -> [Can a b]
+filterNons = foldr go []
+  where
+    go Non acc = acc
+    go t acc = t:acc
+
+-- -------------------------------------------------------------------- --
+-- Folding
+
+-- | Fold over the 'One' cases of a 'Foldable' of 'Can's by some
+-- accumulating function.
+--
+foldOnes :: Foldable f => (a -> m -> m) -> m -> f (Can a b) -> m
+foldOnes k = foldr go
+  where
+    go (One a) acc = k a acc
+    go _ acc = acc
+
+-- | Fold over the 'Eno' cases of a 'Foldable' of 'Can's by some
+-- accumulating function.
+--
+foldEnos :: Foldable f => (b -> m -> m) -> m -> f (Can a b) -> m
+foldEnos k = foldr go
+  where
+    go (Eno b) acc = k b acc
+    go _ acc = acc
+
+-- | Fold over the 'Two' cases of a 'Foldable' of 'Can's by some
+-- accumulating function.
+--
+foldTwos :: Foldable f => (a -> b -> m -> m) -> m -> f (Can a b) -> m
+foldTwos k = foldr go
+  where
+    go (Two a b) acc = k a b acc
+    go _ acc = acc
+
+-- | Gather 'Can' of two lists and produce a list of 'Can' values,
+-- mapping the 'Non' case to the empty list, One' case to a list
+-- of 'One's, the 'Eno' case to a list of 'Eno's, or zipping 'Two'
+-- along both lists.
+--
+gatherCans :: Can [a] [b] -> [Can a b]
+gatherCans Non = []
+gatherCans (One as) = fmap One as
+gatherCans (Eno bs) = fmap Eno bs
+gatherCans (Two as bs) = zipWith Two as bs
+
+-- -------------------------------------------------------------------- --
 -- Partitioning
 
 
 -- | Partition a list of 'Can' values into a tuple of lists of
 -- their parts.
 --
-partition :: [Can a b] -> ([a], [b])
-partition = flip foldr mempty $ \aa ~(as, bs) -> case aa of
+partitionCan :: [Can a b] -> ([a], [b])
+partitionCan = flip foldr mempty $ \aa ~(as, bs) -> case aa of
     Non -> (as, bs)
     One a -> (a:as, bs)
     Eno b -> (as, b:bs)
@@ -181,6 +320,8 @@ codistributeCan = \case
 -- -------------------------------------------------------------------- --
 -- Associativity
 
+-- | Re-associate a 'Can' of cans from left to right.
+--
 reassocLR :: Can (Can a b) c -> Can a (Can b c)
 reassocLR = \case
     Non -> Non
@@ -196,6 +337,8 @@ reassocLR = \case
       Eno b -> Eno (Two b d)
       Two a b -> Two a (Two b d)
 
+-- | Re-associate a 'Can' of cans from right to left.
+--
 reassocRL :: Can a (Can b c) -> Can (Can a b) c
 reassocRL = \case
     Non -> Non
@@ -214,6 +357,8 @@ reassocRL = \case
 -- -------------------------------------------------------------------- --
 -- Symmetry
 
+-- | Swap the positions of values in a 'Can'.
+--
 swapCan :: Can a b -> Can b a
 swapCan = \case
     Non -> Non
@@ -224,6 +369,10 @@ swapCan = \case
 -- -------------------------------------------------------------------- --
 -- Curry & Uncurry
 
+-- | Curry a function from a 'Can' to a 'Maybe' value, resulting in a
+-- function of curried 'Maybe' values. This is analogous to currying
+-- for '(->)'.
+--
 canCurry :: (Can a b -> Maybe c) -> Maybe a -> Maybe b -> Maybe c
 canCurry k ma mb = case (ma, mb) of
     (Nothing, Nothing) -> k Non
@@ -231,31 +380,16 @@ canCurry k ma mb = case (ma, mb) of
     (Nothing, Just b) -> k (Eno b)
     (Just a, Just b) -> k (Two a b)
 
+-- | "Uncurry" a function from a 'Can' to a 'Maybe' value, resulting in a
+-- function of curried 'Maybe' values. This is analogous to uncurrying
+-- for '(->)'.
+--
 canUncurry :: (Maybe a -> Maybe b -> Maybe c) -> Can a b -> Maybe c
 canUncurry k = \case
     Non -> k Nothing Nothing
     One a -> k (Just a) Nothing
     Eno b -> k Nothing (Just b)
     Two a b -> k (Just a) (Just b)
-
--- -------------------------------------------------------------------- --
--- Pairing & Unpairing
-
--- c^(a + b) = c^a * c^b
---
-pairCan
-    :: Can (Maybe a -> Maybe c) (Maybe b -> Maybe c)
-    -> Wedge a b
-    -> Maybe c
-pairCan c w = case (c, w) of
-  (Non, _) -> Nothing
-  (_, Nowhere) -> Nothing
-  (One ac, Here a) -> ac (Just a)
-  (One ac, _) -> ac Nothing
-  (Eno bc, Here _) -> bc Nothing
-  (Eno bc, There b) -> bc (Just b)
-  (Two ac _, Here a) -> ac (Just a)
-  (Two _ bc, There b) -> bc (Just b)
 
 -- -------------------------------------------------------------------- --
 -- Std instances

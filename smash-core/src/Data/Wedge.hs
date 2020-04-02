@@ -7,11 +7,27 @@ module Data.Wedge
 ( -- * Datatypes
   Wedge(..)
   -- * Combinators
+  -- ** Eliminators
+, wedge
+  -- ** General
 , quotWedge
 , wedgeLeft
 , wedgeRight
-  -- ** Eliminators
-, wedge
+, fromWedge
+, toWedge
+, isHere
+, isThere
+, isNowhere
+  -- ** Filtering
+, heres
+, theres
+, filterHeres
+, filterTheres
+, filterNowheres
+  -- ** Folding
+, foldHeres
+, foldTheres
+, gatherWedges
   -- ** Distributivity
 , distributeWedge
 , codistributeWedge
@@ -32,29 +48,18 @@ import Data.Hashable
 import GHC.Generics
 
 
+-- | The 'Wedge' data type represents values with two exclusive
+-- possibilities, and an empty case. This is a coproduct of pointed
+-- types - i.e. of 'Maybe' values. The result is a type, 'Wedge a b',
+-- which is isomorphic to 'Maybe (Either a b)'.
+--
+--
 data Wedge a b = Nowhere | Here a | There b
   deriving
     ( Eq, Ord, Read, Show
     , Generic, Generic1
     , Typeable, Data
     )
-
--- -------------------------------------------------------------------- --
--- Combinators
-
--- | Take the quotient of two pointed types and produce a wedge
---
-quotWedge :: Either (Maybe a) (Maybe b) -> Wedge a b
-quotWedge (Left a) = maybe Nowhere Here a
-quotWedge (Right b) = maybe Nowhere There b
-
-wedgeLeft :: Maybe a -> Wedge a b
-wedgeLeft Nothing = Nowhere
-wedgeLeft (Just a) = Here a
-
-wedgeRight :: Maybe b -> Wedge a b
-wedgeRight Nothing = Nowhere
-wedgeRight (Just b) = There b
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
@@ -70,8 +75,148 @@ wedge _ f _ (Here a) = f a
 wedge _ _ g (There b) = g b
 
 -- -------------------------------------------------------------------- --
--- Eliminators
+-- Combinators
 
+-- | Given two possible pointed types, produce a 'Wedge' by
+-- considering the left case, the right case, and mapping their
+-- 'Nothing' cases to 'Nowhere'. This is a pushout of pointed
+-- types `A <- * -> B`.
+--
+quotWedge :: Either (Maybe a) (Maybe b) -> Wedge a b
+quotWedge (Left a) = maybe Nowhere Here a
+quotWedge (Right b) = maybe Nowhere There b
+
+-- | Convert a 'Wedge a b' into a 'Maybe (Either a b)' value.
+--
+fromWedge :: Wedge a b -> Maybe (Either a b)
+fromWedge Nowhere = Nothing
+fromWedge (Here a) = Just (Left a)
+fromWedge (There b) = Just (Right b)
+
+-- | Convert a 'Maybe (Either a b)' value into a 'Wedge'
+--
+toWedge :: Maybe (Either a b) -> Wedge a b
+toWedge Nothing = Nowhere
+toWedge (Just e) = either Here There e
+
+-- | Inject a 'Maybe' value into the 'Here' case of a 'Wedge',
+-- or 'Nowhere' if the empty case is given. This is analogous to the
+-- 'Left' constructor for 'Either'.
+--
+wedgeLeft :: Maybe a -> Wedge a b
+wedgeLeft Nothing = Nowhere
+wedgeLeft (Just a) = Here a
+
+-- | Inject a 'Maybe' value into the 'There' case of a 'Wedge',
+-- or 'Nowhere' if the empty case is given. This is analogous to the
+-- 'Right' constructor for 'Either'.
+--
+wedgeRight :: Maybe b -> Wedge a b
+wedgeRight Nothing = Nowhere
+wedgeRight (Just b) = There b
+
+-- | Detect if a 'Wedge' is a 'Here' case.
+--
+isHere :: Wedge a b -> Bool
+isHere = \case
+  Here _ -> True
+  _ -> False
+
+-- | Detect if a 'Wedge' is a 'There' case.
+--
+isThere :: Wedge a b -> Bool
+isThere = \case
+  There _ -> True
+  _ -> False
+
+-- | Detect if a 'Wedge' is a 'Nowhere' empty case.
+--
+isNowhere :: Wedge a b -> Bool
+isNowhere = \case
+  Nowhere -> True
+  _ -> False
+
+-- -------------------------------------------------------------------- --
+-- Filtering
+
+
+-- | Given a 'Foldable' of 'Wedge's, collect the 'Here' cases, if any.
+--
+heres :: Foldable f => f (Wedge a b) -> [a]
+heres = foldr go mempty
+  where
+    go (Here a) acc = a:acc
+    go _ acc = acc
+
+-- | Given a 'Foldable' of 'Wedge's, collect the 'There' cases, if any.
+--
+theres :: Foldable f => f (Wedge a b) -> [b]
+theres = foldr go mempty
+  where
+    go (There b) acc = b:acc
+    go _ acc = acc
+
+-- | Filter the 'Here' cases of a 'Foldable' of 'Wedge's.
+--
+filterHeres :: Foldable f => f (Wedge a b) -> [Wedge a b]
+filterHeres = foldr go mempty
+  where
+    go (Here _) acc = acc
+    go ab acc = ab:acc
+
+-- | Filter the 'There' cases of a 'Foldable' of 'Wedge's.
+--
+filterTheres :: Foldable f => f (Wedge a b) -> [Wedge a b]
+filterTheres = foldr go mempty
+  where
+    go (There _) acc = acc
+    go ab acc = ab:acc
+
+-- | Filter the 'Nowhere' cases of a 'Foldable' of 'Wedge's.
+--
+filterNowheres :: Foldable f => f (Wedge a b) -> [Wedge a b]
+filterNowheres = foldr go mempty
+  where
+    go Nowhere acc = acc
+    go ab acc = ab:acc
+
+-- -------------------------------------------------------------------- --
+-- Filtering
+
+-- | Fold over the 'Here' cases of a 'Foldable' of 'Wedge's by some
+-- accumulating function.
+--
+foldHeres :: Foldable f => (a -> m -> m) -> m -> f (Wedge a b) -> m
+foldHeres k = foldr go
+  where
+    go (Here a) acc = k a acc
+    go _ acc = acc
+
+-- | Fold over the 'There' cases of a 'Foldable' of 'Wedge's by some
+-- accumulating function.
+--
+foldTheres :: Foldable f => (b -> m -> m) -> m -> f (Wedge a b) -> m
+foldTheres k = foldr go
+  where
+    go (There b) acc = k b acc
+    go _ acc = acc
+
+
+-- | Given a 'Wedge' of lists, produce a list of wedges by mapping
+-- the list of 'as' to 'Here' values, or the list of 'bs' to 'There'
+-- values.
+--
+gatherWedges :: Wedge [a] [b] -> [Wedge a b]
+gatherWedges = \case
+  Nowhere -> []
+  Here as -> fmap Here as
+  There bs -> fmap There bs
+
+-- -------------------------------------------------------------------- --
+-- Associativity
+
+-- | Re-associate a 'Wedge' of 'Wedge's from left to right.
+--
 reassocLR :: Wedge (Wedge a b) c -> Wedge a (Wedge b c)
 reassocLR = \case
     Nowhere -> Nowhere
@@ -81,6 +226,8 @@ reassocLR = \case
       There b -> There (Here b)
     There c -> There (There c)
 
+-- | Re-associate a 'Wedge' of 'Wedge's from left to right.
+--
 reassocRL :: Wedge a (Wedge b c) -> Wedge (Wedge a b) c
 reassocRL = \case
   Nowhere -> Nowhere
@@ -93,13 +240,16 @@ reassocRL = \case
 -- -------------------------------------------------------------------- --
 -- Distributivity
 
-distributeWedge :: Wedge (Either a b) c -> Wedge a (Wedge b c)
+-- | Distribute a 'Wedge' over a product.
+--
+distributeWedge :: Wedge (a,b) c -> (Wedge a c, Wedge b c)
 distributeWedge = \case
-  Nowhere -> Nowhere
-  Here (Left a) -> Here a
-  Here (Right b) -> There (Here b)
-  There c -> There (There c)
+  Nowhere -> (Nowhere, Nowhere)
+  Here (a,b) -> (Here a, Here b)
+  There c -> (There c, There c)
 
+-- | Codistribute 'Wedge's over a coproduct
+--
 codistributeWedge :: Either (Wedge a c) (Wedge b c) -> Wedge (Either a b) c
 codistributeWedge = \case
   Left w -> case w of
@@ -114,6 +264,8 @@ codistributeWedge = \case
 -- -------------------------------------------------------------------- --
 -- Symmetry
 
+-- | Swap the positions of the @a@'s and the @b@'s in a 'Wedge'.
+--
 swapWedge :: Wedge a b -> Wedge b a
 swapWedge = \case
   Nowhere -> Nowhere
@@ -124,7 +276,6 @@ swapWedge = \case
 -- Std instances
 
 instance (Hashable a, Hashable b) => Hashable (Wedge a b)
-
 
 instance Functor (Wedge a) where
   fmap f = \case

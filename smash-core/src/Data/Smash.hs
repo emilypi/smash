@@ -10,6 +10,8 @@ module Data.Smash
 , smashSnd
 , smashProduct
 , smashProduct'
+, smashCurry
+, smashUncurry
 ) where
 
 
@@ -24,6 +26,15 @@ import Data.Wedge
 import GHC.Generics
 
 
+-- | The 'Smash' data type represents A value which has either an
+-- empty case, or two values. The result is a type, 'Smash a b', which is
+-- isomorphic to 'Maybe (a,b)'.
+--
+-- Categorically, the smash product (the quotient of a pointed product by
+-- a wedge sum) has interesting properties. It forms a closed
+-- symmetric-monoidal tensor in the category Hask* of pointed haskell
+-- types (i.e. 'Maybe' values).
+--
 data Smash a b = Nada | Smash a b
   deriving
     ( Eq, Ord, Read, Show
@@ -31,11 +42,10 @@ data Smash a b = Nada | Smash a b
     , Typeable, Data
     )
 
-smash :: c -> (a -> b -> c) -> Smash a b -> c
-smash c _ Nada = c
-smash _ f (Smash a b) = f a b
+-- -------------------------------------------------------------------- --
+-- Combinators
 
--- | Smash product of two 'Can' datatypes
+-- | Smash product of pointed type modulo its wedge
 --
 smashProduct :: Can a b -> Smash a b
 smashProduct = can Nada (const Nada) (const Nada) Smash
@@ -46,13 +56,39 @@ smashProduct' a b = \case
   Here c -> Smash c b
   There d -> Smash a d
 
+-- | Project the left value of a 'Smash' datatype. This is analogous
+-- to 'fst' for '(,)'.
+--
 smashFst :: Smash a b -> Maybe a
 smashFst Nada = Nothing
 smashFst (Smash a _) = Just a
 
+-- | Project the right value of a 'Smash' datatype. This is analogous
+-- to 'snd' for '(,)'.
+--
 smashSnd :: Smash a b -> Maybe b
 smashSnd Nada = Nothing
 smashSnd (Smash _ b) = Just b
+
+-- -------------------------------------------------------------------- --
+-- Eliminators
+
+-- | Case elimination for the 'Smash' datatype
+--
+smash :: c -> (a -> b -> c) -> Smash a b -> c
+smash c _ Nada = c
+smash _ f (Smash a b) = f a b
+
+-- -------------------------------------------------------------------- --
+-- Currying & Uncurrying
+
+smashCurry :: (Smash a b -> Maybe c) -> Maybe a -> Maybe b -> Maybe c
+smashCurry f (Just a) (Just b) = f (Smash a b)
+smashCurry _ _ _ = Nothing
+
+smashUncurry :: (Maybe a -> Maybe b -> Maybe c) -> Smash a b -> Maybe c
+smashUncurry _ Nada = Nothing
+smashUncurry f (Smash a b) = f (Just a) (Just b)
 
 -- -------------------------------------------------------------------- --
 -- Std instances
