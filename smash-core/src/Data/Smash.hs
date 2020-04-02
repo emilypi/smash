@@ -5,6 +5,8 @@
 {-# LANGUAGE TupleSections #-}
 module Data.Smash
 ( Smash(..)
+, toSmash
+, fromSmash
 , smash
 , smashFst
 , smashSnd
@@ -44,6 +46,18 @@ data Smash a b = Nada | Smash a b
 
 -- -------------------------------------------------------------------- --
 -- Combinators
+
+-- | Convert a 'Maybe' value into a 'Smash' value
+--
+toSmash :: Maybe (a,b) -> Smash a b
+toSmash Nothing = Nada
+toSmash (Just (a,b)) = Smash a b
+
+-- | Convert a 'Smash' value into a 'Maybe' value
+--
+fromSmash :: Smash a b -> Maybe (a,b)
+fromSmash Nada = Nothing
+fromSmash (Smash a b) = Just (a,b)
 
 -- | Smash product of pointed type modulo its wedge
 --

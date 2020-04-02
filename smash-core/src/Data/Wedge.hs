@@ -7,9 +7,6 @@ module Data.Wedge
 ( -- * Datatypes
   Wedge(..)
   -- * Combinators
-  -- ** Eliminators
-, wedge
-  -- ** General
 , quotWedge
 , wedgeLeft
 , wedgeRight
@@ -18,6 +15,8 @@ module Data.Wedge
 , isHere
 , isThere
 , isNowhere
+  -- ** Eliminators
+, wedge
   -- ** Filtering
 , heres
 , theres

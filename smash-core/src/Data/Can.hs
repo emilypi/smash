@@ -7,17 +7,14 @@ module Data.Can
 ( -- * Datatypes
   Can(..)
   -- * Combinators
-  -- ** Eliminators
-, can
-  -- ** General
-, fromCan
-, toCan
 , canFst
 , canSnd
 , isOne
 , isEno
 , isTwo
 , isNon
+  -- ** Eliminators
+, can
   -- ** Filtering
 , ones
 , enos
@@ -55,7 +52,6 @@ import Data.Bitraversable
 import Data.Data
 import qualified Data.Either as E
 import Data.Hashable
-import Data.These (These(..))
 
 import GHC.Generics
 
@@ -95,22 +91,6 @@ can _ _ _ h (Two a b) = h a b
 
 -- -------------------------------------------------------------------- --
 -- Combinators
-
--- | Create a 'Maybe (These a b)' value from a 'Can' value.
---
-fromCan :: Can a b -> Maybe (These a b)
-fromCan Non = Nothing
-fromCan (One a) = Just (This a)
-fromCan (Eno b) = Just (That b)
-fromCan (Two a b) = Just (These a b)
-
--- | Create a 'Can' value from a 'Maybe (These a b)' value.
---
-toCan :: Maybe (These a b) -> Can a b
-toCan Nothing = Non
-toCan (Just (This a)) = One a
-toCan (Just (That b)) = Eno b
-toCan (Just (These a b)) = Two a b
 
 -- | Project the left value of a 'Can' datatype. This is analogous
 -- to 'fst' for '(,)'.
