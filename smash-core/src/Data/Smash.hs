@@ -4,28 +4,46 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 module Data.Smash
-( Smash(..)
+( -- * Datatypes
+  Smash(..)
+  -- * Combinators
 , toSmash
 , fromSmash
-, smash
 , smashFst
 , smashSnd
 , smashProduct
 , smashProduct'
+, isSmash
+, isNada
+  -- ** Eliminators
+, smash
+  -- * Filtering
+, smashes
+, filterNadas
+  -- * Folding
+, foldSmashes
+, gatherSmashes
+  -- * Currying & Uncurrying
 , smashCurry
 , smashUncurry
+  -- * Distributivity
 , distributeSmash
-, distributeSmash'
+, codistributeSmash
+  -- * Associativity
+, reassocLR
+, reassocRL
+  -- * Symmetry
+, swapSmash
 ) where
 
 
 import Data.Bifunctor
 import Data.Bifoldable
 import Data.Bitraversable
-import Data.Can
+import Data.Can (Can(..), can)
 import Data.Data
 import Data.Hashable
-import Data.Wedge
+import Data.Wedge (Wedge(..))
 
 import GHC.Generics
 
@@ -89,6 +107,17 @@ smashSnd :: Smash a b -> Maybe b
 smashSnd Nada = Nothing
 smashSnd (Smash _ b) = Just b
 
+-- | Detect whether a 'Smash' value is empty
+--
+isNada :: Smash a b -> Bool
+isNada Nada = True
+isNada _ = False
+
+-- | Detect whether a 'Smash' value is not empty
+--
+isSmash :: Smash a b -> Bool
+isSmash = not . isNada
+
 -- -------------------------------------------------------------------- --
 -- Eliminators
 
@@ -97,6 +126,51 @@ smashSnd (Smash _ b) = Just b
 smash :: c -> (a -> b -> c) -> Smash a b -> c
 smash c _ Nada = c
 smash _ f (Smash a b) = f a b
+
+-- -------------------------------------------------------------------- --
+-- Filtering
+
+-- | Given a 'Foldable' of 'Smash's, collect the values of the
+-- 'Smash' cases, if any.
+--
+smashes :: Foldable f => f (Smash a b) -> [(a,b)]
+smashes = foldr go []
+  where
+    go (Smash a b) acc = (a,b) : acc
+    go _ acc = acc
+
+-- | Filter the 'Nada' cases of a 'Foldable' of 'Smash' values.
+--
+filterNadas :: Foldable f => f (Smash a b) -> [Smash a b]
+filterNadas = foldr go []
+  where
+    go Nada acc = acc
+    go a acc = a:acc
+
+-- -------------------------------------------------------------------- --
+-- Folding
+
+-- | Fold over the 'Smash' case of a 'Foldable' of 'Smash' products by
+-- some accumulatig function.
+--
+foldSmashes
+    :: Foldable f
+    => (a -> b -> m -> m)
+    -> m
+    -> f (Smash a b)
+    -> m
+foldSmashes f = foldr go
+  where
+    go (Smash a b) acc = f a b acc
+    go _ acc = acc
+
+-- | Gather a 'Smash' product of two lists and product a list of 'Smash'
+-- values, mapping the 'Nada' case to the empty list and zipping
+-- the two lists together with the 'Smash' constructor otherwise.
+--
+gatherSmashes :: Smash [a] [b] -> [Smash a b]
+gatherSmashes (Smash as bs) = zipWith Smash as bs
+gatherSmashes _ = []
 
 -- -------------------------------------------------------------------- --
 -- Currying & Uncurrying
@@ -123,17 +197,41 @@ smashUncurry f (Smash a b) = f (Just a) (Just b)
 -- Smash products distribute over coproducts ('Wedge's) in pointed Hask
 --
 distributeSmash ::  Smash (Wedge a b) c -> Wedge (Smash a c) (Smash b c)
-distributeSmash Nada = Nowhere
 distributeSmash (Smash (Here a) c) = Here (Smash a c)
 distributeSmash (Smash (There b) c) = There (Smash b c)
+distributeSmash _ = Nowhere
 
 -- | A wedge of smash products is a smash product of wedges.
 -- Smash products distribute over coproducts ('Wedge's) in pointed Hask
 --
-distributeSmash' :: Wedge (Smash a c) (Smash b c) -> Smash (Wedge a b) c
-distributeSmash' (Here (Smash a c)) = Smash (Here a) c
-distributeSmash' (There (Smash b c)) = Smash (There b) c
-distributeSmash' _ = Nada
+codistributeSmash :: Wedge (Smash a c) (Smash b c) -> Smash (Wedge a b) c
+codistributeSmash (Here (Smash a c)) = Smash (Here a) c
+codistributeSmash (There (Smash b c)) = Smash (There b) c
+codistributeSmash _ = Nada
+
+-- -------------------------------------------------------------------- --
+-- Associativity
+
+-- | Reassociate a 'Smash' product from left to right.
+--
+reassocLR :: Smash (Smash a b) c -> Smash a (Smash b c)
+reassocLR (Smash (Smash a b) c) = Smash a (Smash b c)
+reassocLR _ = Nada
+
+-- | Reassociate a 'Smash' product from right to left.
+--
+reassocRL :: Smash a (Smash b c) -> Smash (Smash a b) c
+reassocRL (Smash a (Smash b c)) = Smash (Smash a b) c
+reassocRL _ = Nada
+
+-- -------------------------------------------------------------------- --
+-- Symmetry
+
+-- | Swap the positions of values in a 'Smash a b' to form a 'Smash b a'.
+--
+swapSmash :: Smash a b -> Smash b a
+swapSmash Nada = Nada
+swapSmash (Smash a b) = Smash b a
 
 -- -------------------------------------------------------------------- --
 -- Std instances

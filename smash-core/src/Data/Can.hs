@@ -138,7 +138,8 @@ isNon _ = False
 -- -------------------------------------------------------------------- --
 -- Filtering
 
--- | Given a 'Foldable' of 'Can's, collect the 'One' cases, if any.
+-- | Given a 'Foldable' of 'Can's, collect the values of the
+-- 'One' cases, if any.
 --
 ones :: Foldable f => f (Can a b) -> [a]
 ones = foldr go []
@@ -146,7 +147,8 @@ ones = foldr go []
     go (One a) acc = a:acc
     go _ acc = acc
 
--- | Given a 'Foldable' of 'Can's, collect the 'Eno' cases, if any.
+-- | Given a 'Foldable' of 'Can's, collect the values of the
+-- 'Eno' cases, if any.
 --
 enos :: Foldable f => f (Can a b) -> [b]
 enos = foldr go []
@@ -154,7 +156,8 @@ enos = foldr go []
     go (Eno a) acc = a:acc
     go _ acc = acc
 
--- | Given a 'Foldable' of 'Can's, collect the 'Two' cases, if any.
+-- | Given a 'Foldable' of 'Can's, collect the values of the
+-- 'Two' cases, if any.
 --
 twos :: Foldable f => f (Can a b) -> [(a,b)]
 twos = foldr go []
@@ -224,7 +227,7 @@ foldTwos k = foldr go
     go (Two a b) acc = k a b acc
     go _ acc = acc
 
--- | Gather 'Can' of two lists and produce a list of 'Can' values,
+-- | Gather a 'Can' of two lists and produce a list of 'Can' values,
 -- mapping the 'Non' case to the empty list, One' case to a list
 -- of 'One's, the 'Eno' case to a list of 'Eno's, or zipping 'Two'
 -- along both lists.
