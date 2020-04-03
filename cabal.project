@@ -1,5 +1,6 @@
 packages:
-   smash-categories
+   smash-aeson
+ , smash-categories
  , smash-core
  , smash-lens
  , smash-microlens
