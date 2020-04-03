@@ -3,8 +3,21 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
+-- |
+-- Module       : Data.Smash
+-- Copyright    : (c) 2020 Emily Pillmore
+-- License      : BSD-3-Clause
+--
+-- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
+-- Stability    : Experimental
+-- Portability  : portable
+--
+-- This module contains the definition for the 'Smash' datatype. In
+-- practice, this type is isomorphic to 'Maybe (a,b)' - the type with
+-- two possibly non-exclusive values and an empty case.
 module Data.Smash
 ( -- * Datatypes
+  -- $general
   Smash(..)
   -- * Combinators
 , toSmash
@@ -47,6 +60,48 @@ import Data.Wedge (Wedge(..))
 
 import GHC.Generics
 
+{- $general
+
+Categorically, the 'Smash' datatype represents the
+<https://ncatlab.org/nlab/show/smash+product smash product> in the category Hask*
+of pointed Hask types. The category Hask* consists of Hask types affixed with
+a dedicated base point - @a@ in Hask* is equivalent to `1 + a`, or 'Maybe a' in
+Hask. The smash product is a symmetric, monoidal tensor in Hask* that plays
+nicely with the product, 'Can', and coproduct, 'Wedge', in Hask*. Pictorially,
+these datatypes looks like this:
+
+@
+'Can':
+        a
+        |
+Non +---+---+ (a,b)
+        |
+        b
+
+'Wedge':
+                a
+                |
+Nowhere +-------+
+                |
+                b
+
+
+'Smash':
+
+
+Nada +--------+ (a,b)
+@
+
+
+The fact that smash products form a closed, symmetric monoidal tensor for Hask*
+means that we can speak in terms of the language of linear logic for this category.
+Namely, we can understand how 'Smash', 'Wedge', and 'Can' interact. 'Can' and 'Wedge'
+distribute nicely over each other, and 'Smash' distributes well over 'Wedge', but
+is only semi-distributable over 'Wedge''s linear counterpart, which is left
+out of the api. In this library, we focus on the fragment of this pointed logic
+that makes sense to use, and that will be useful to us as Haskell developers.
+
+-}
 
 -- | The 'Smash' data type represents A value which has either an
 -- empty case, or two values. The result is a type, 'Smash a b', which is

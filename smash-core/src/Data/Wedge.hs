@@ -3,6 +3,18 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
+-- |
+-- Module       : Data.Wedge
+-- Copyright    : (c) 2020 Emily Pillmore
+-- License      : BSD-3-Clause
+--
+-- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
+-- Stability    : Experimental
+-- Portability  : portable
+--
+-- This module contains the definition for the 'Wedge' datatype. In
+-- practice, this type is isomorphic to 'Maybe (Either a b)' - the type with
+-- two possibly non-exclusive values and an empty case.
 module Data.Wedge
 ( -- * Datatypes
   Wedge(..)
@@ -52,7 +64,6 @@ import GHC.Generics
 -- types - i.e. of 'Maybe' values. The result is a type, 'Wedge a b',
 -- which is isomorphic to 'Maybe (Either a b)'.
 --
---
 data Wedge a b = Nowhere | Here a | There b
   deriving
     ( Eq, Ord, Read, Show
@@ -63,6 +74,8 @@ data Wedge a b = Nowhere | Here a | There b
 -- -------------------------------------------------------------------- --
 -- Eliminators
 
+-- | Case elimination for the 'Wedge' datatype.
+--
 wedge
     :: c
     -> (a -> c)
