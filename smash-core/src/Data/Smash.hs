@@ -65,10 +65,10 @@ import GHC.Generics
 Categorically, the 'Smash' datatype represents the
 <https://ncatlab.org/nlab/show/smash+product smash product> in the category Hask*
 of pointed Hask types. The category Hask* consists of Hask types affixed with
-a dedicated base point - @a@ in Hask* is equivalent to `1 + a`, or 'Maybe a' in
+a dedicated base point - `a` in Hask* is equivalent to `1 + a`, or 'Maybe a' in
 Hask. The smash product is a symmetric, monoidal tensor in Hask* that plays
 nicely with the product, 'Can', and coproduct, 'Wedge', in Hask*. Pictorially,
-these datatypes looks like this:
+these datatypes look like this:
 
 @
 'Can':
@@ -98,7 +98,7 @@ means that we can speak in terms of the language of linear logic for this catego
 Namely, we can understand how 'Smash', 'Wedge', and 'Can' interact. 'Can' and 'Wedge'
 distribute nicely over each other, and 'Smash' distributes well over 'Wedge', but
 is only semi-distributable over 'Wedge''s linear counterpart, which is left
-out of the api. In this library, we focus on the fragment of this pointed logic
+out of the api. In this library, we focus on the fragment of this pointed linear logic
 that makes sense to use, and that will be useful to us as Haskell developers.
 
 -}
