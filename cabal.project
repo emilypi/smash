@@ -1,6 +1,6 @@
 packages:
    smash-core
- -- , smash-lens
+ , smash-lens
  -- , smash-microlens
 
 
