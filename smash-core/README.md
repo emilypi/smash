@@ -16,7 +16,7 @@ You can imagine these three types as `Maybe (Either a b)`, `Maybe (Either a (Eit
 
 Pictorially, these datatypes look like this:
 
-@
+```
 'Can':
         a
         |
@@ -36,4 +36,4 @@ Nowhere +-------+
 
 
 Nada +--------+ (a,b)
-@
+```
