@@ -78,9 +78,8 @@ import GHC.Generics
 Categorically, the 'Can' datatype represents the
 <https://ncatlab.org/nlab/show/pointed+object#limits_and_colimits pointed product>
 in the category Hask* of pointed Hask types. The category Hask* consists of
-Hask types affixed with a dedicated base point of an object along with the object.
-In Hask*, this is equivalent to `1 + a`, or 'Maybe a' in Hask. Hence, the product is
-`(1 + a) * (1 + b) ~ 1 + a + b + a*b`, or `Maybe (Either (Either a b) (a,b))` in Hask. Pictorially, you can visualize
+Hask types affixed with a dedicated base point of an object along with the object - i.e. @'Maybe' a@ in Hask. Hence, the product is
+@(1 + a) * (1 + b) ~ 1 + a + b + a*b@, or @'Maybe' ('Either' ('Either' a b) (a,b))@ in Hask. Pictorially, you can visualize
 this as:
 
 
@@ -97,16 +96,16 @@ Non +---+---+ (a,b)
 The fact that we can think about 'Can' as your average product gives us
 some reasoning power about how this thing will be able to interact with the
 coproduct in Hask*, called 'Wedge'. Namely, facts about currying
-'Can a b -> c ~ a -> b -> c' and distributivity over 'Wedge'
+@Can a b -> c ~ a -> b -> c@ and distributivity over 'Wedge'
 along with other facts about its associativity, commutativity, and
-any other analogy with `(,)` that you can think of.
+any other analogy with '(,)' that you can think of.
 -}
 
 
 -- | The 'Can' data type represents values with two non-exclusive
 -- possibilities, as well as an empty case. This is a product of pointed types -
--- i.e. of 'Maybe' values. The result is a type, 'Can a b', which is isomorphic
--- to 'Maybe (These a b)'.
+-- i.e. of 'Maybe' values. The result is a type, @'Can' a b@, which is isomorphic
+-- to @'Maybe' ('These' a b)@.
 --
 data Can a b = Non | One a | Eno b | Two a b
   deriving
