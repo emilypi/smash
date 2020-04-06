@@ -4,12 +4,12 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, base, stdenv }:
+  f = { mkDerivation, base, microlens, smash, stdenv }:
       mkDerivation {
         pname = "smash-microlens";
         version = "0.1.0.0";
         src = ./.;
-        libraryHaskellDepends = [ base ];
+        libraryHaskellDepends = [ base microlens smash ];
         testHaskellDepends = [ base ];
         homepage = "https://github.com/emilypi/smash";
         description = "Optics for the `smash` library";

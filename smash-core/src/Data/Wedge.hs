@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -62,7 +63,9 @@ import Data.Bifoldable
 import Data.Bitraversable
 import Data.Data
 import Data.Hashable
+#if __GLASGOW_HASKELL__ < 804
 import Data.Semigroup (Semigroup(..))
+#endif
 
 import GHC.Generics
 

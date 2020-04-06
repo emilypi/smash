@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -66,7 +67,10 @@ import Data.Can (Can(..), can)
 import Data.Data
 import Data.Hashable
 import Data.Wedge (Wedge(..))
+#if __GLASGOW_HASKELL__ < 804
 import Data.Semigroup (Semigroup(..))
+#endif
+
 
 import GHC.Generics
 

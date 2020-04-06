@@ -119,13 +119,15 @@ install:
   - |
     echo "packages: smash-core" >> cabal.project
     echo "packages: smash-lens" >> cabal.project
+    echo "packages: smash-microlens" >> cabal.project
   - |
     echo "optimization: False" >> cabal.project
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(smash|smash-lens)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(smash|smash-lens|smash-microlens)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   - if [ -f "smash-core/configure.ac" ]; then (cd "smash-core" && autoreconf -i); fi
   - if [ -f "smash-lens/configure.ac" ]; then (cd "smash-lens" && autoreconf -i); fi
+  - if [ -f "smash-microlens/configure.ac" ]; then (cd "smash-microlens" && autoreconf -i); fi
   - ${CABAL} v2-freeze $WITHCOMPILER ${TEST} ${BENCH} | color_cabal_output
   - "cat cabal.project.freeze | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
   - rm  cabal.project.freeze
@@ -142,15 +144,17 @@ script:
   - find . -maxdepth 1 -type f -name '*.tar.gz' -exec rm       '{}' \;
   - PKGDIR_smash="$(find . -maxdepth 1 -type d -regex '.*/smash-[0-9.]*')"
   - PKGDIR_smash_lens="$(find . -maxdepth 1 -type d -regex '.*/smash-lens-[0-9.]*')"
+  - PKGDIR_smash_microlens="$(find . -maxdepth 1 -type d -regex '.*/smash-microlens-[0-9.]*')"
   # Generate cabal.project
   - rm -rf cabal.project cabal.project.local cabal.project.freeze
   - touch cabal.project
   - |
     echo "packages: ${PKGDIR_smash}" >> cabal.project
     echo "packages: ${PKGDIR_smash_lens}" >> cabal.project
+    echo "packages: ${PKGDIR_smash_microlens}" >> cabal.project
   - |
     echo "optimization: False" >> cabal.project
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(smash|smash-lens)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(smash|smash-lens|smash-microlens)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   # Building...
@@ -164,6 +168,7 @@ script:
   # cabal check...
   - (cd ${PKGDIR_smash} && ${CABAL} -vnormal check)
   - (cd ${PKGDIR_smash_lens} && ${CABAL} -vnormal check)
+  - (cd ${PKGDIR_smash_microlens} && ${CABAL} -vnormal check)
   # haddock...
   - ${CABAL} v2-haddock $WITHCOMPILER --with-haddock $HADDOCK ${TEST} ${BENCH} all | color_cabal_output
   # Building without installed constraints for packages in global-db...

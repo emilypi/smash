@@ -1,7 +1,7 @@
 packages:
    smash-core
  , smash-lens
- -- , smash-microlens
+ , smash-microlens
 
 
 tests: True

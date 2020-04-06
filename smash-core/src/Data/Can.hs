@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -70,7 +71,9 @@ import Data.Data
 import qualified Data.Either as E
 import Data.Foldable
 import Data.Hashable
+#if __GLASGOW_HASKELL__ < 804
 import Data.Semigroup (Semigroup(..))
+#endif
 
 import GHC.Generics
 
