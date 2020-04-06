@@ -70,6 +70,7 @@ import Data.Data
 import qualified Data.Either as E
 import Data.Foldable
 import Data.Hashable
+import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
@@ -504,6 +505,7 @@ instance (Semigroup a, Semigroup b) => Semigroup (Can a b) where
 
 instance (Semigroup a, Semigroup b) => Monoid (Can a b) where
   mempty = Non
+  mappend = (<>)
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors
@@ -520,7 +522,7 @@ instance Bifoldable Can where
     Non -> mempty
     One a -> f a
     Eno b -> g b
-    Two a b -> f a <> g b
+    Two a b -> f a `mappend` g b
 
 instance Bitraversable Can where
   bitraverse f g = \case

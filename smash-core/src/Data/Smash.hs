@@ -66,6 +66,7 @@ import Data.Can (Can(..), can)
 import Data.Data
 import Data.Hashable
 import Data.Wedge (Wedge(..))
+import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
@@ -372,7 +373,7 @@ instance Monoid a => Applicative (Smash a) where
 
   Nada <*> _ = Nada
   _ <*> Nada = Nada
-  Smash a f <*> Smash c d = Smash (a <> c) (f d)
+  Smash a f <*> Smash c d = Smash (a `mappend` c) (f d)
 
 instance Monoid a => Monad (Smash a) where
   return = pure
@@ -381,7 +382,7 @@ instance Monoid a => Monad (Smash a) where
   Nada >>= _ = Nada
   Smash a b >>= k = case k b of
     Nada -> Nada
-    Smash c d -> Smash (a <> c) d
+    Smash c d -> Smash (a `mappend` c) d
 
 instance (Semigroup a, Semigroup b) => Semigroup (Smash a b) where
   Nada <> b = b
@@ -390,6 +391,7 @@ instance (Semigroup a, Semigroup b) => Semigroup (Smash a b) where
 
 instance (Semigroup a, Semigroup b) => Monoid (Smash a b) where
   mempty = Nada
+  mappend = (<>)
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors
@@ -402,7 +404,7 @@ instance Bifunctor Smash where
 instance Bifoldable Smash where
   bifoldMap f g = \case
     Nada -> mempty
-    Smash a b -> f a <> g b
+    Smash a b -> f a `mappend` g b
 
 instance Bitraversable Smash where
   bitraverse f g = \case

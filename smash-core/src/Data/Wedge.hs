@@ -62,6 +62,7 @@ import Data.Bifoldable
 import Data.Bitraversable
 import Data.Data
 import Data.Hashable
+import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
