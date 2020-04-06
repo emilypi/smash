@@ -45,7 +45,11 @@ module Data.Smash
 , smashUncurry
   -- * Distributivity
 , distributeSmash
-, codistributeSmash
+, undistributeSmash
+, pairSmash
+, unpairSmash
+, pairSmashCan
+, unpairSmashCan
   -- * Associativity
 , reassocLR
 , reassocRL
@@ -293,10 +297,41 @@ distributeSmash _ = Nowhere
 -- | A wedge of smash products is a smash product of wedges.
 -- Smash products distribute over coproducts ('Wedge's) in pointed Hask
 --
-codistributeSmash :: Wedge (Smash a c) (Smash b c) -> Smash (Wedge a b) c
-codistributeSmash (Here (Smash a c)) = Smash (Here a) c
-codistributeSmash (There (Smash b c)) = Smash (There b) c
-codistributeSmash _ = Nada
+undistributeSmash :: Wedge (Smash a c) (Smash b c) -> Smash (Wedge a b) c
+undistributeSmash (Here (Smash a c)) = Smash (Here a) c
+undistributeSmash (There (Smash b c)) = Smash (There b) c
+undistributeSmash _ = Nada
+
+-- | Distribute a 'Smash' of a pair into a pair of 'Smash's
+--
+pairSmash :: Smash (a,b) c -> (Smash a c, Smash b c)
+pairSmash Nada = (Nada, Nada)
+pairSmash (Smash (a,b) c) = (Smash a c, Smash b c)
+
+-- | Distribute a 'Smash' of a pair into a pair of 'Smash's
+--
+unpairSmash :: (Smash a c, Smash b c) -> Smash (a,b) c
+unpairSmash (Smash a c, Smash b _) = Smash (a,b) c
+unpairSmash _ = Nada
+
+-- | Distribute a 'Smash' of a 'Can' into a 'Can' of 'Smash's
+--
+pairSmashCan :: Smash (Can a b) c -> Can (Smash a c) (Smash b c)
+pairSmashCan Nada = Non
+pairSmashCan (Smash cc c) = case cc of
+  Non -> Non
+  One a -> One (Smash a c)
+  Eno b -> Eno (Smash b c)
+  Two a b -> Two (Smash a c) (Smash b c)
+
+-- | Unistribute a 'Can' of 'Smash's into a 'Smash' of 'Can's.
+--
+unpairSmashCan :: Can (Smash a c) (Smash b c) -> Smash (Can a b) c
+unpairSmashCan cc = case cc of
+  One (Smash a c) -> Smash (One a) c
+  Eno (Smash b c) -> Smash (Eno b) c
+  Two (Smash a c) (Smash b _) -> Smash (Two a b) c
+  _ -> Nada
 
 -- -------------------------------------------------------------------- --
 -- Associativity
