@@ -18,6 +18,7 @@
 -- two possibly non-exclusive values and an empty case.
 module Data.Can
 ( -- * Datatypes
+  -- $general
   Can(..)
   -- * Combinators
 , canFst
@@ -45,9 +46,10 @@ module Data.Can
 , canCurry
 , canUncurry
   -- * Partitioning
-, partitionCan
+, partitionCans
 , partitionAll
 , partitionEithers
+, mapCans
   -- * Distributivity
 , distributeCan
 , codistributeCan
@@ -59,14 +61,46 @@ module Data.Can
 ) where
 
 
+import Control.Applicative (Alternative(..))
+
 import Data.Bifunctor
 import Data.Bifoldable
 import Data.Bitraversable
 import Data.Data
 import qualified Data.Either as E
+import Data.Foldable
 import Data.Hashable
 
 import GHC.Generics
+
+{- $general
+
+Categorically, the 'Can' datatype represents the
+<https://ncatlab.org/nlab/show/pointed+object#limits_and_colimits pointed product>
+in the category Hask* of pointed Hask types. The category Hask* consists of
+Hask types affixed with a dedicated base point of an object along with the object.
+In Hask*, this is equivalent to `1 + a`, or 'Maybe a' in Hask. Hence, the product is
+`(1 + a) * (1 + b) ~ 1 + a + b + a*b`, or `Maybe (Either (Either a b) (a,b))` in Hask. Pictorially, you can visualize
+this as:
+
+
+@
+'Can':
+        a
+        |
+Non +---+---+ (a,b)
+        |
+        b
+@
+
+
+The fact that we can think about 'Can' as your average product gives us
+some reasoning power about how this thing will be able to interact with the
+coproduct in Hask*, called 'Wedge'. Namely, facts about currying
+'Can a b -> c ~ a -> b -> c' and distributivity over 'Wedge'
+along with other facts about its associativity, commutativity, and
+any other analogy with `(,)` that you can think of.
+-}
 
 
 -- | The 'Can' data type represents values with two non-exclusive
@@ -253,21 +287,10 @@ gatherCans (Two as bs) = zipWith Two as bs
 -- -------------------------------------------------------------------- --
 -- Partitioning
 
-
--- | Partition a list of 'Can' values into a tuple of lists of
--- their parts.
---
-partitionCan :: [Can a b] -> ([a], [b])
-partitionCan = flip foldr mempty $ \aa ~(as, bs) -> case aa of
-    Non -> (as, bs)
-    One a -> (a:as, bs)
-    Eno b -> (as, b:bs)
-    Two a b -> (a:as, b:bs)
-
 -- | Partition a list of 'Can' values into a triple of lists of
 -- all of their constituent parts
 --
-partitionAll :: [Can a b] -> ([a], [b], [(a,b)])
+partitionAll :: Foldable f => f (Can a b) -> ([a], [b], [(a,b)])
 partitionAll = flip foldr mempty $ \aa ~(as, bs, cs) -> case aa of
     Non -> (as, bs, cs)
     One a -> (a:as, bs, cs)
@@ -278,13 +301,42 @@ partitionAll = flip foldr mempty $ \aa ~(as, bs, cs) -> case aa of
 -- a 'Can' value of lists of left and right values, or 'Non' in the
 -- case of an empty list.
 --
-partitionEithers :: [Either a b] -> Can [a] [b]
-partitionEithers = go . E.partitionEithers
+partitionEithers :: Foldable f => f (Either a b) -> Can [a] [b]
+partitionEithers = go . E.partitionEithers . toList
   where
     go ([], []) = Non
     go (ls, []) = One ls
     go ([], rs) = Eno rs
     go (ls, rs) = Two ls rs
+
+-- | Given a 'Foldable' of 'Can's, partition it into a tuple of alternatives
+-- their parts.
+--
+partitionCans
+    :: forall f t a b
+    . ( Foldable t
+      , Alternative f
+      )
+    => t (Can a b) -> (f a, f b)
+partitionCans = foldr go (empty, empty)
+  where
+    go Non acc = acc
+    go (One a) (as, bs) = (pure a <|> as, bs)
+    go (Eno b) (as, bs) = (as, pure b <|> bs)
+    go (Two a b) (as, bs) = (pure a <|> as, pure b <|> bs)
+
+-- | Partition a structure by mapping its contents into 'Can's,
+-- and folding over '(<|>)'.
+--
+mapCans
+    :: forall f t a b c
+    . ( Alternative f
+      , Traversable t
+      )
+    => (a -> Can b c)
+    -> t a
+    -> (f b, f c)
+mapCans f = partitionCans . fmap f
 
 -- -------------------------------------------------------------------- --
 -- Distributivity

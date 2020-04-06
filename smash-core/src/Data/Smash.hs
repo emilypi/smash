@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 -- |
 -- Module       : Data.Smash
@@ -24,8 +25,8 @@ module Data.Smash
 , fromSmash
 , smashFst
 , smashSnd
-, smashProduct
-, smashProduct'
+, quotSmash
+, hulkSmash
 , isSmash
 , isNada
   -- ** Eliminators
@@ -36,6 +37,9 @@ module Data.Smash
   -- * Folding
 , foldSmashes
 , gatherSmashes
+  -- * Partitioning
+, partitionSmashes
+, mapSmashes
   -- * Currying & Uncurrying
 , smashCurry
 , smashUncurry
@@ -50,6 +54,7 @@ module Data.Smash
 ) where
 
 
+import Control.Applicative (Alternative(..))
 import Data.Bifunctor
 import Data.Bifoldable
 import Data.Bitraversable
@@ -62,12 +67,11 @@ import GHC.Generics
 
 {- $general
 
-Categorically, the 'Smash' datatype represents the
-<https://ncatlab.org/nlab/show/smash+product smash product> in the category Hask*
+Categorically, the 'Smash' datatype represents a special type of product, a
+<https://ncatlab.org/nlab/show/smash+product smash product>, in the category Hask*
 of pointed Hask types. The category Hask* consists of Hask types affixed with
-a dedicated base point - `a` in Hask* is equivalent to `1 + a`, or 'Maybe a' in
-Hask. The smash product is a symmetric, monoidal tensor in Hask* that plays
-nicely with the product, 'Can', and coproduct, 'Wedge', in Hask*. Pictorially,
+a dedicated base point - i.e. all objects look like 'Maybe a'. The smash product is a symmetric, monoidal tensor in Hask* that plays
+nicely with the product, 'Can', and coproduct, 'Wedge'. Pictorially,
 these datatypes look like this:
 
 @
@@ -136,14 +140,14 @@ fromSmash (Smash a b) = Just (a,b)
 
 -- | Smash product of pointed type modulo its wedge
 --
-smashProduct :: Can a b -> Smash a b
-smashProduct = can Nada (const Nada) (const Nada) Smash
+quotSmash :: Can a b -> Smash a b
+quotSmash = can Nada (const Nada) (const Nada) Smash
 
 -- | Take the smash product of a wedge and two default values
 -- to place in either the left or right side of the final product
 --
-smashProduct' :: a -> b -> Wedge a b -> Smash a b
-smashProduct' a b = \case
+hulkSmash :: a -> b -> Wedge a b -> Smash a b
+hulkSmash a b = \case
   Nowhere -> Nada
   Here c -> Smash c b
   There d -> Smash a d
@@ -226,6 +230,36 @@ foldSmashes f = foldr go
 gatherSmashes :: Smash [a] [b] -> [Smash a b]
 gatherSmashes (Smash as bs) = zipWith Smash as bs
 gatherSmashes _ = []
+
+-- -------------------------------------------------------------------- --
+-- Partitioning
+
+-- | Given a 'Foldable' of 'Smash's, partition it into a tuple of alternatives
+-- their parts.
+--
+partitionSmashes
+    :: forall f t a b
+    . ( Foldable t
+      , Alternative f
+      )
+    => t (Smash a b) -> (f a, f b)
+partitionSmashes = foldr go (empty, empty)
+  where
+    go Nada acc = acc
+    go (Smash a b) (as, bs) = (pure a <|> as, pure b <|> bs)
+
+-- | Partition a structure by mapping its contents into 'Smash's,
+-- and folding over '(<|>)'.
+--
+mapSmashes
+    :: forall f t a b c
+    . ( Alternative f
+      , Traversable t
+      )
+    => (a -> Smash b c)
+    -> t a
+    -> (f b, f c)
+mapSmashes f = partitionSmashes . fmap f
 
 -- -------------------------------------------------------------------- --
 -- Currying & Uncurrying

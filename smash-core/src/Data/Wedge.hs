@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 -- |
 -- Module       : Data.Wedge
@@ -17,6 +18,7 @@
 -- two possibly non-exclusive values and an empty case.
 module Data.Wedge
 ( -- * Datatypes
+  -- $general
   Wedge(..)
   -- * Combinators
 , quotWedge
@@ -39,6 +41,9 @@ module Data.Wedge
 , foldHeres
 , foldTheres
 , gatherWedges
+  -- ** Partitioning
+, partitionWedges
+, mapWedges
   -- ** Distributivity
 , distributeWedge
 , codistributeWedge
@@ -50,6 +55,8 @@ module Data.Wedge
 ) where
 
 
+import Control.Applicative (Alternative(..))
+
 import Data.Bifunctor
 import Data.Bifoldable
 import Data.Bitraversable
@@ -58,6 +65,36 @@ import Data.Hashable
 
 import GHC.Generics
 
+{- $general
+
+Categorically, the 'Wedge' datatype represents the coproduct (like, 'Either')
+in the category Hask* of pointed Hask types, called a <https://ncatlab.org/nlab/show/wedge+sum wedge sum>.
+The category Hask* consists of Hask types affixed with
+a dedicated base point along with an object. In Hask, this is
+equivalent to `1 + a`, also known as 'Maybe a'. Because we can conflate
+basepoints of different types (there is only one @Nothing@ type), the wedge sum is
+can be viewed as the type `1 + a + b`, or `Maybe (Either a b)` in Hask.
+Pictorially, one can visualize this as:
+
+
+@
+'Wedge':
+                a
+                |
+Nowhere +-------+
+                |
+                b
+@
+
+
+The fact that we can think about 'Wedge' as a coproduct gives us
+some reasoning power about how a 'Wedge' will interact with the
+product in Hask*, called 'Can'. Namely, we know that a product of a type and a
+coproduct, `a * (b + c)`, is equivalent to `(a + b) * (a + c)`. Additioally,
+we may derive other facts about its associativity, distributivity, commutativity, and
+any more. As an exercise, think of soemthing `Either` can do. Now do it with 'Wedge'!
+
+-}
 
 -- | The 'Wedge' data type represents values with two exclusive
 -- possibilities, and an empty case. This is a coproduct of pointed
@@ -219,10 +256,40 @@ foldTheres k = foldr go
 -- values.
 --
 gatherWedges :: Wedge [a] [b] -> [Wedge a b]
-gatherWedges = \case
-  Nowhere -> []
-  Here as -> fmap Here as
-  There bs -> fmap There bs
+gatherWedges Nowhere = []
+gatherWedges (Here as) = fmap Here as
+gatherWedges (There bs) = fmap There bs
+
+-- -------------------------------------------------------------------- --
+-- Partitioning
+
+-- | Given a 'Foldable' of 'Wedge's, partition it into a tuple of alternatives
+-- their parts.
+--
+partitionWedges
+    :: forall f t a b
+    . ( Foldable t
+      , Alternative f
+      )
+    => t (Wedge a b) -> (f a, f b)
+partitionWedges = foldr go (empty, empty)
+  where
+    go Nowhere acc = acc
+    go (Here a) (as, bs) = (pure a <|> as, bs)
+    go (There b) (as, bs) = (as, pure b <|> bs)
+
+-- | Partition a structure by mapping its contents into 'Wedge's,
+-- and folding over '(<|>)'.
+--
+mapWedges
+    :: forall f t a b c
+    . ( Alternative f
+      , Traversable t
+      )
+    => (a -> Wedge b c)
+    -> t a
+    -> (f b, f c)
+mapWedges f = partitionWedges . fmap f
 
 -- -------------------------------------------------------------------- --
 -- Associativity
