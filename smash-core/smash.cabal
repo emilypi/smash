@@ -35,11 +35,11 @@ library
                      , Data.Smash
                      , Data.Wedge
 
-  build-depends:       base >=4.10 && <5.0
-                     , bifunctors
-                     , binary
-                     , deepseq
-                     , hashable
+  build-depends:       base        >=4.10 && <5.0
+                     , bifunctors ^>=5.5
+                     , binary     ^>=0.8
+                     , deepseq    ^>=1.4
+                     , hashable   ^>=1.3
 
   hs-source-dirs:      src
   default-language:    Haskell2010
