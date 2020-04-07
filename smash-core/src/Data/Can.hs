@@ -86,7 +86,7 @@ Categorically, the 'Can' datatype represents the
 <https://ncatlab.org/nlab/show/pointed+object#limits_and_colimits pointed product>
 in the category Hask* of pointed Hask types. The category Hask* consists of
 Hask types affixed with a dedicated base point of an object along with the object - i.e. @'Maybe' a@ in Hask. Hence, the product is
-@(1 + a) * (1 + b) ~ 1 + a + b + a*b@, or @'Maybe' ('Either' ('Either' a b) (a,b))@ in Hask. Pictorially, you can visualize
+@(1 + a) * (1 + b) ~ 1 + a + b + a*b@, or @'Maybe' ('These' a b)@ in Hask. Pictorially, you can visualize
 this as:
 
 
