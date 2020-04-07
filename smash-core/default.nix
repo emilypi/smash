@@ -4,12 +4,16 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, base, bifunctors, hashable, stdenv }:
+  f = { mkDerivation, base, bifunctors, binary, deepseq, hashable
+      , stdenv
+      }:
       mkDerivation {
         pname = "smash";
-        version = "0.1.0.0";
+        version = "0.1.1.0";
         src = ./.;
-        libraryHaskellDepends = [ base bifunctors hashable ];
+        libraryHaskellDepends = [
+          base bifunctors binary deepseq hashable
+        ];
         testHaskellDepends = [ base ];
         homepage = "https://github.com/emilypi/smash";
         description = "Smash products - like 'These', but with a unit!";
