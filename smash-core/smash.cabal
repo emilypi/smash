@@ -3,7 +3,7 @@ cabal-version:       2.0
 
 name:                smash
 version:             0.1.1.0
-synopsis:            Smash products - like 'These', but with a unit!
+synopsis:            Combinators for Maybe types
 description:
   Smash products are like the 'These' datatype, only with a unit. You can
   think of this type as isomorphic to 'Maybe (These a b)'.
