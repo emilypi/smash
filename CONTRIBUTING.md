@@ -2,7 +2,7 @@
 
 ## Bug Reports
 
-Please [open an issue](https://github.com/emilypi/possibly-can/issues/new) if you have a bug to report.
+Please [open an issue](https://github.com/emilypi/smash/issues/new) if you have a bug to report.
 
 The more detailed your report, the faster it can be resolved and will ensure it
 is resolved in the right way. I personally appreciate it when people not only open
@@ -21,8 +21,8 @@ contribution counts.
 ## Code
 
 If you would like to contribute code to fix a bug, add a new feature, or
-otherwise improve `possibly-can`, pull requests are most welcome. It's a good idea to
-[submit an issue](https://github.com/emilypi/possibly-can/issues/new) to
+otherwise improve `smash`, pull requests are most welcome. It's a good idea to
+[submit an issue](https://github.com/emilypi/smash/issues/new) to
 discuss the change before plowing into writing code.
 
 Any and all claims of "performance" should be backed up with benchmarks. You can
@@ -31,7 +31,7 @@ unjustifiable changes to the existing code.
 
 ## Code Quality
 
-The `possibly-can` project intends to focus on 4 things as primary objectives: generality, simplicity, power,
+The `smash` project intends to focus on 4 things as primary objectives: generality, simplicity, power,
 and modularity. As such, all code should strive to maintain
 a balance between the latter 3 that keeps in mind the end-result to the user. Ask yourself
 the following questions:

@@ -5,6 +5,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeApplications #-}
 -- |
 -- Module       : Data.Smash
 -- Copyright    : (c) 2020 Emily Pillmore
@@ -12,7 +13,7 @@
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
 -- Stability    : Experimental
--- Portability  : portable
+-- Portability  : CPP, RankNTypes, TypeApplications
 --
 -- This module contains the definition for the 'Smash' datatype. In
 -- practice, this type is isomorphic to 'Maybe (a,b)' - the type with
@@ -60,8 +61,11 @@ module Data.Smash
 
 
 import Control.Applicative (Alternative(..))
+import Control.DeepSeq (NFData(..))
+
 import Data.Bifunctor
 import Data.Bifoldable
+import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Can (Can(..), can)
 import Data.Data
@@ -396,6 +400,19 @@ instance (Semigroup a, Semigroup b) => Semigroup (Smash a b) where
 instance (Semigroup a, Semigroup b) => Monoid (Smash a b) where
   mempty = Nada
   mappend = (<>)
+
+instance (NFData a, NFData b) => NFData (Smash a b) where
+  rnf Nada = ()
+  rnf (Smash a b) = rnf a `seq` rnf b
+
+instance (Binary a, Binary b) => Binary (Smash a b) where
+  put Nada = put @Int 0
+  put (Smash a b) = put @Int 1 >> put a >> put b
+
+  get = get @Int >>= \case
+    0 -> pure Nada
+    1 -> Smash <$> get <*> get
+    _ -> fail "Invalid Smash index"
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

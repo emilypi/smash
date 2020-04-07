@@ -5,6 +5,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeApplications #-}
 -- |
 -- Module       : Data.Can
 -- Copyright    : (c) 2020 Emily Pillmore
@@ -12,7 +13,7 @@
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
 -- Stability    : Experimental
--- Portability  : portable
+-- Portability  : CPP, RankNTypes, TypeApplications
 --
 -- This module contains the definition for the 'Can' datatype. In
 -- practice, this type is isomorphic to 'Maybe' 'These' - the type with
@@ -63,9 +64,11 @@ module Data.Can
 
 
 import Control.Applicative (Alternative(..))
+import Control.DeepSeq (NFData(..))
 
 import Data.Bifunctor
 import Data.Bifoldable
+import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Data
 import qualified Data.Either as E
@@ -509,6 +512,25 @@ instance (Semigroup a, Semigroup b) => Semigroup (Can a b) where
 instance (Semigroup a, Semigroup b) => Monoid (Can a b) where
   mempty = Non
   mappend = (<>)
+
+instance (NFData a, NFData b) => NFData (Can a b) where
+    rnf Non = ()
+    rnf (One a) = rnf a
+    rnf (Eno b) = rnf b
+    rnf (Two a b) = rnf a `seq` rnf b
+
+instance (Binary a, Binary b) => Binary (Can a b) where
+  put Non = put @Int 0
+  put (One a) = put @Int 1 >> put a
+  put (Eno b) = put @Int 2 >> put b
+  put (Two a b) = put @Int 3 >> put a >> put b
+
+  get = get @Int >>= \case
+    0 -> pure Non
+    1 -> One <$> get
+    2 -> Eno <$> get
+    3 -> Two <$> get <*> get
+    _ -> fail "Invalid Can index"
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

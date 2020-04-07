@@ -29,17 +29,6 @@ source-repository head
   location: https://github.com/emilypi/smash.git
 
 
-flag ghc-flags
-  description: Generate .ghc.flags files during compilation
-  manual:      True
-  default:     False
-
-flag perf-flags
-  description: Performance tuning flags
-  manual:      True
-  default:     False
-
-
 library
   exposed-modules:     Data.Can.Microlens
                      , Data.Smash.Microlens
@@ -55,13 +44,6 @@ library
 
   ghc-options:         -Wall
 
-  if flag(ghc-flags)
-    build-tool-depends: hsinspect:hsinspect
-    build-depends: ghcflags
-    ghc-options: -fplugin GhcFlags.Plugin
-
-  if flag(perf-flags)
-    ghc-options: -ddump-simpl -ddump-to-file
 
 test-suite smash-microlens-test
   default-language:    Haskell2010

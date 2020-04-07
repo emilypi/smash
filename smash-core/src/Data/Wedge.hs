@@ -5,6 +5,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeApplications #-}
 -- |
 -- Module       : Data.Wedge
 -- Copyright    : (c) 2020 Emily Pillmore
@@ -12,7 +13,7 @@
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
 -- Stability    : Experimental
--- Portability  : portable
+-- Portability  : CPP, RankNTypes, TypeApplications
 --
 -- This module contains the definition for the 'Wedge' datatype. In
 -- practice, this type is isomorphic to 'Maybe (Either a b)' - the type with
@@ -57,9 +58,11 @@ module Data.Wedge
 
 
 import Control.Applicative (Alternative(..))
+import Control.DeepSeq (NFData(..))
 
 import Data.Bifunctor
 import Data.Bifoldable
+import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Data
 import Data.Hashable
@@ -403,6 +406,22 @@ instance (Semigroup a, Semigroup b) => Semigroup (Wedge a b) where
 
 instance (Semigroup a, Semigroup b) => Monoid (Wedge a b) where
   mempty = Nowhere
+
+instance (NFData a, NFData b) => NFData (Wedge a b) where
+    rnf Nowhere = ()
+    rnf (Here a) = rnf a
+    rnf (There b) = rnf b
+
+instance (Binary a, Binary b) => Binary (Wedge a b) where
+  put Nowhere = put @Int 0
+  put (Here a) = put @Int 1 >> put a
+  put (There b) = put @Int 2 >> put b
+
+  get = get @Int >>= \case
+    0 -> pure Nowhere
+    1 -> Here <$> get
+    2 -> There <$> get
+    _ -> fail "Invalid Wedge index"
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

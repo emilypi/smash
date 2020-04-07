@@ -1,0 +1,36 @@
+cabal-version:       2.0
+
+
+name:                smash-aeson
+version:             0.1.0.0
+synopsis:            Aeson support for the smash library
+description:
+  Aeson support for the `smash` library
+homepage:            https://github.com/emilypi/smash
+bug-reports:         https://github.com/emilypi/smash/issues
+license:             BSD3
+license-file:        LICENSE
+author:              Emily Pillmore
+maintainer:          emilypi@cohomolo.gy
+copyright:           (c) 2020 Emily Pillmore <emilypi@cohomolo.gy>
+category:            Data
+build-type:          Simple
+extra-source-files:
+  CHANGELOG.md
+  README.md
+
+tested-with:
+  GHC ==8.2.2 || ==8.4.3 || ==8.4.4 || ==8.6.3 || ==8.6.5 || ==8.8.3 || ==8.10.1
+
+library
+  exposed-modules:     Data.Can.Aeson
+                     , Data.Smash.Aeson
+                     , Data.Wedge.Aeson
+
+  build-depends:       base   >=4.10  && <5.0
+                     , aeson ^>=1.4.7
+                     , smash ^>=0.1.1
+                     , unordered-containers
+
+  hs-source-dirs:      src
+  default-language:    Haskell2010

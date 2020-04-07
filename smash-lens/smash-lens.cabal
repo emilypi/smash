@@ -5,7 +5,7 @@ name:                smash-lens
 version:             0.1.0.0
 synopsis:            Optics for the `smash` library
 description:
-  Prisms, Traverals, and combinators for the `smash` library.
+  Prisms, Traversals, and combinators for the `smash` library.
 
 homepage:            https://github.com/emilypi/smash
 bug-reports:         https://github.com/emilypi/smash/issues

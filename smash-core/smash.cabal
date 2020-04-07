@@ -2,7 +2,7 @@ cabal-version:       2.0
 
 
 name:                smash
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            Smash products - like 'These', but with a unit!
 description:
   Smash products are like the 'These' datatype, only with a unit. You can
@@ -34,10 +34,11 @@ library
   exposed-modules:     Data.Can
                      , Data.Smash
                      , Data.Wedge
-  -- other-modules:
-  -- other-extensions:
+
   build-depends:       base >=4.10 && <5.0
                      , bifunctors
+                     , binary
+                     , deepseq
                      , hashable
 
   hs-source-dirs:      src
