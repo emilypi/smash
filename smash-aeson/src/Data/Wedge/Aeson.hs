@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Module       : Data.Wedge.Aeson
 -- Copyright    : (c) 2020 Emily Pillmore
@@ -14,7 +15,7 @@ module Data.Wedge.Aeson where
 
 
 import Data.Aeson
-import Data.Aeson.Encoding (emptyObject_, pair, pairs)
+import Data.Aeson.Encoding (emptyObject_, pair)
 import qualified Data.HashMap.Lazy as HM
 import Data.Wedge (Wedge(..))
 
@@ -50,11 +51,11 @@ instance ToJSON2 Wedge where
 instance ToJSON a => ToJSON1 (Wedge a) where
     liftToJSON _ _ (Here a) = object [ "Here" .= a ]
     liftToJSON g _ (There b) = object [ "There" .= g b ]
-    liftToJSON g _ Nowhere = object []
+    liftToJSON _ _ Nowhere = object []
 
     liftToEncoding _ _ (Here a) = pairs $ "Here" .= a
     liftToEncoding g _ (There b) = pairs $ pair "There" (g b)
-    liftToEncoding g _ Nowhere = emptyObject_
+    liftToEncoding _ _ Nowhere = emptyObject_
 
 instance FromJSON2 Wedge where
     liftParseJSON2 f _ g _ = withObject "Wedge a b" (go . HM.toList)

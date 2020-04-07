@@ -406,6 +406,7 @@ instance (Semigroup a, Semigroup b) => Semigroup (Wedge a b) where
 
 instance (Semigroup a, Semigroup b) => Monoid (Wedge a b) where
   mempty = Nowhere
+  mappend = (<>)
 
 instance (NFData a, NFData b) => NFData (Wedge a b) where
     rnf Nowhere = ()

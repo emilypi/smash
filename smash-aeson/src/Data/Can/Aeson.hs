@@ -1,4 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Module       : Data.Can.Aeson
 -- Copyright    : (c) 2020 Emily Pillmore
@@ -6,7 +8,7 @@
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
 -- Stability    : Experimental
--- Portability  : portable
+-- Portability  : CPP
 --
 -- This module contains the Aeson instances for the 'Can' datatype.
 --
@@ -14,9 +16,12 @@ module Data.Can.Aeson where
 
 
 import Data.Aeson
-import Data.Aeson.Encoding (emptyObject_, pair, pairs)
+import Data.Aeson.Encoding (emptyObject_, pair)
 import qualified Data.HashMap.Lazy as HM
 import Data.Can (Can(..))
+#if __GLASGOW_HASKELL__ < 804
+import Data.Semigroup (Semigroup(..))
+#endif
 
 
 instance (ToJSON a, ToJSON b) => ToJSON (Can a b) where
@@ -56,12 +61,12 @@ instance ToJSON a => ToJSON1 (Can a) where
     liftToJSON _ _ (One a) = object [ "One" .= a ]
     liftToJSON g _ (Eno b) = object [ "Eno" .= g b ]
     liftToJSON g _ (Two a b) = object [ "One" .= a, "Eno" .= g b ]
-    liftToJSON g _ Non = object []
+    liftToJSON _ _ Non = object []
 
     liftToEncoding _ _ (One a) = pairs $ "One" .= a
     liftToEncoding g _ (Eno b) = pairs $ pair "Eno" (g b)
     liftToEncoding g _ (Two a b) = pairs $ "One" .= a <> pair "Eno" (g b)
-    liftToEncoding g _ Non = emptyObject_
+    liftToEncoding _ _ Non = emptyObject_
 
 instance FromJSON2 Can where
     liftParseJSON2 f _ g _ = withObject "Can a b" (go . HM.toList)
