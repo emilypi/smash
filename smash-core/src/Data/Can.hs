@@ -80,6 +80,8 @@ import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
+import Internal
+
 {- $general
 
 Categorically, the 'Can' datatype represents the
@@ -350,26 +352,12 @@ mapCans f = partitionCans . fmap f
 -- | Distribute a 'Can' value over a product.
 --
 distributeCan :: Can (a,b) c -> (Can a c, Can b c)
-distributeCan = \case
-    Non -> (Non, Non)
-    One (a,b) -> (One a, One b)
-    Eno c -> (Eno c, Eno c)
-    Two (a,b) c -> (Two a c, Two b c)
+distributeCan = unzipFirst
 
 -- | Codistribute a coproduct over a 'Can' value.
 --
 codistributeCan :: Either (Can a c) (Can b c) -> Can (Either a b) c
-codistributeCan = \case
-    Left ac -> case ac of
-      Non -> Non
-      One a -> One (Left a)
-      Eno c -> Eno c
-      Two a c -> Two (Left a) c
-    Right bc -> case bc of
-      Non -> Non
-      One b -> One (Right b)
-      Eno c -> Eno c
-      Two b c -> Two (Right b) c
+codistributeCan = undecideFirst
 
 -- -------------------------------------------------------------------- --
 -- Associativity

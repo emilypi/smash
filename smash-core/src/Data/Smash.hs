@@ -78,6 +78,8 @@ import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
+import Internal
+
 {- $general
 
 Categorically, the 'Smash' datatype represents a special type of product, a
@@ -314,8 +316,7 @@ undistributeSmash _ = Nada
 -- | Distribute a 'Smash' of a pair into a pair of 'Smash's
 --
 pairSmash :: Smash (a,b) c -> (Smash a c, Smash b c)
-pairSmash Nada = (Nada, Nada)
-pairSmash (Smash (a,b) c) = (Smash a c, Smash b c)
+pairSmash = unzipFirst
 
 -- | Distribute a 'Smash' of a pair into a pair of 'Smash's
 --
@@ -333,7 +334,7 @@ pairSmashCan (Smash cc c) = case cc of
   Eno b -> Eno (Smash b c)
   Two a b -> Two (Smash a c) (Smash b c)
 
--- | Unistribute a 'Can' of 'Smash's into a 'Smash' of 'Can's.
+-- | Undistribute a 'Can' of 'Smash's into a 'Smash' of 'Can's.
 --
 unpairSmashCan :: Can (Smash a c) (Smash b c) -> Smash (Can a b) c
 unpairSmashCan cc = case cc of
