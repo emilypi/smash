@@ -5,7 +5,7 @@
 
 This package consists of 3 datatypes: [Wedge](https://hackage.haskell.org/package/smash/docs/Data-Wedge.html), [Can](https://hackage.haskell.org/package/smash/docs/Data-Can.html), and [Smash](https://hackage.haskell.org/package/smash/docs/Data-Smash.html).
 
-You can imagine these three types as `Maybe (Either a b)`, `Maybe (a,b)`, and `Maybe (These a b)` respectively. It turns out that that each of these datatypes has special properties:
+You can imagine these three types as `Maybe (Either a b)`, `Maybe (These a b)`, and `Maybe (a,b)` respectively. It turns out that that each of these datatypes has special properties:
 
 - the `Wedge` datatype represents the coproduct (like, `Either`) in the category Hask* of pointed Hask types, called a [wedge sum](https://ncatlab.org/nlab/show/wedge+sum). One can derive this by noting that units are the same in Haskell, and the sum of two pointed types is `(1 + a) + (1 + b) ~ 1 + a + b ~ Wedge a b`.
 
