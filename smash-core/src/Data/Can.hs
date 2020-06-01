@@ -176,7 +176,11 @@ canEach
       -- ^ eliminator for the 'Eno' case
     -> Can a b
     -> c
+#if MIN_VERSION_base(4,11,0)
 canEach f g = canWithMerge mempty f g (<>)
+#else
+canEach f g = canWithMerge mempty f g mappend
+#endif
 
 -- | Case elimination for the 'Can' datatype, with uniform behaviour over a
 -- 'Monoid' result in the context of an 'Applicative'.
@@ -189,7 +193,11 @@ canEachA
       -- ^ eliminator for the 'Eno' case
     -> Can a b
     -> m c
+#if MIN_VERSION_base(4,11,0)
 canEachA f g = canWithMerge (pure mempty) f g (liftA2 (<>))
+#else
+canEachA f g = canWithMerge (pure mempty) f g (liftA2 mappend)
+#endif
 
 -- -------------------------------------------------------------------- --
 -- Combinators
