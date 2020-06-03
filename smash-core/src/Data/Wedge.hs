@@ -72,6 +72,8 @@ import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
+import Internal
+
 {- $general
 
 Categorically, the 'Wedge' datatype represents the coproduct (like, 'Either')
@@ -329,23 +331,12 @@ reassocRL = \case
 -- | Distribute a 'Wedge' over a product.
 --
 distributeWedge :: Wedge (a,b) c -> (Wedge a c, Wedge b c)
-distributeWedge = \case
-  Nowhere -> (Nowhere, Nowhere)
-  Here (a,b) -> (Here a, Here b)
-  There c -> (There c, There c)
+distributeWedge = unzipFirst
 
 -- | Codistribute 'Wedge's over a coproduct
 --
 codistributeWedge :: Either (Wedge a c) (Wedge b c) -> Wedge (Either a b) c
-codistributeWedge = \case
-  Left w -> case w of
-    Nowhere -> Nowhere
-    Here a -> Here (Left a)
-    There c -> There c
-  Right w -> case w of
-    Nowhere -> Nowhere
-    Here b -> Here (Right b)
-    There c -> There c
+codistributeWedge = undecideFirst
 
 -- -------------------------------------------------------------------- --
 -- Symmetry

@@ -31,6 +31,9 @@ module Data.Can
 , isNon
   -- ** Eliminators
 , can
+, canWithMerge
+, canEach
+, canEachA
   -- * Folding
 , foldOnes
 , foldEnos
@@ -63,7 +66,7 @@ module Data.Can
 ) where
 
 
-import Control.Applicative (Alternative(..))
+import Control.Applicative (Alternative(..), liftA2)
 import Control.DeepSeq (NFData(..))
 
 import Data.Bifunctor
@@ -79,6 +82,8 @@ import Data.Semigroup (Semigroup(..))
 #endif
 
 import GHC.Generics
+
+import Internal
 
 {- $general
 
@@ -141,6 +146,58 @@ can c _ _ _ Non = c
 can _ f _ _ (One a) = f a
 can _ _ g _ (Eno b) = g b
 can _ _ _ h (Two a b) = h a b
+
+-- | Case elimination for the 'Can' datatype, with uniform behaviour.
+--
+canWithMerge
+    :: c
+      -- ^ default value to supply for the 'Non' case
+    -> (a -> c)
+      -- ^ eliminator for the 'One' case
+    -> (b -> c)
+      -- ^ eliminator for the 'Eno' case
+    -> (c -> c -> c)
+      -- ^ merger for the 'Two' case
+    -> Can a b
+    -> c
+canWithMerge c _ _ _ Non = c
+canWithMerge _ f _ _ (One a) = f a
+canWithMerge _ _ g _ (Eno b) = g b
+canWithMerge _ f g m (Two a b) = m (f a) (g b)
+
+-- | Case elimination for the 'Can' datatype, with uniform behaviour over a
+-- 'Monoid' result.
+--
+canEach
+    :: Monoid c
+    => (a -> c)
+      -- ^ eliminator for the 'One' case
+    -> (b -> c)
+      -- ^ eliminator for the 'Eno' case
+    -> Can a b
+    -> c
+#if MIN_VERSION_base(4,11,0)
+canEach f g = canWithMerge mempty f g (<>)
+#else
+canEach f g = canWithMerge mempty f g mappend
+#endif
+
+-- | Case elimination for the 'Can' datatype, with uniform behaviour over a
+-- 'Monoid' result in the context of an 'Applicative'.
+--
+canEachA
+    :: (Applicative m, Monoid c)
+    => (a -> m c)
+      -- ^ eliminator for the 'One' case
+    -> (b -> m c)
+      -- ^ eliminator for the 'Eno' case
+    -> Can a b
+    -> m c
+#if MIN_VERSION_base(4,11,0)
+canEachA f g = canWithMerge (pure mempty) f g (liftA2 (<>))
+#else
+canEachA f g = canWithMerge (pure mempty) f g (liftA2 mappend)
+#endif
 
 -- -------------------------------------------------------------------- --
 -- Combinators
@@ -350,26 +407,12 @@ mapCans f = partitionCans . fmap f
 -- | Distribute a 'Can' value over a product.
 --
 distributeCan :: Can (a,b) c -> (Can a c, Can b c)
-distributeCan = \case
-    Non -> (Non, Non)
-    One (a,b) -> (One a, One b)
-    Eno c -> (Eno c, Eno c)
-    Two (a,b) c -> (Two a c, Two b c)
+distributeCan = unzipFirst
 
 -- | Codistribute a coproduct over a 'Can' value.
 --
 codistributeCan :: Either (Can a c) (Can b c) -> Can (Either a b) c
-codistributeCan = \case
-    Left ac -> case ac of
-      Non -> Non
-      One a -> One (Left a)
-      Eno c -> Eno c
-      Two a c -> Two (Left a) c
-    Right bc -> case bc of
-      Non -> Non
-      One b -> One (Right b)
-      Eno c -> Eno c
-      Two b c -> Two (Right b) c
+codistributeCan = undecideFirst
 
 -- -------------------------------------------------------------------- --
 -- Associativity

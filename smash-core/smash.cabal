@@ -38,6 +38,8 @@ library
                      , Data.Smash
                      , Data.Wedge
 
+  other-modules:       Internal
+
   build-depends:       base        >=4.10 && <5.0
                      , bifunctors ^>=5.5
                      , binary     ^>=0.8
