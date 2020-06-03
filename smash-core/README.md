@@ -3,38 +3,39 @@
 [![Build Status](https://travis-ci.com/emilypi/smash.svg?branch=master)](https://travis-ci.com/emilypi/smash)
 [![Hackage](https://img.shields.io/hackage/v/smash.svg)](https://hackage.haskell.org/package/smash)
 
-This package consists of 3 datatypes: [Wedge](https://hackage.haskell.org/package/smash/docs/Data-Wedge.html), [Can](https://hackage.haskell.org/package/smash/docs/Data-Can.html), and [Smash](https://hackage.haskell.org/package/smash/docs/Data-Smash.html).
+This package consists of 3 datatypes:
+ - [Wedge](https://hackage.haskell.org/package/smash/docs/Data-Wedge.html): Isomorphic to `Maybe (Either a b)`. The `Wedge` datatype represents the coproduct in the category Hask\* of pointed Hask types, called a [wedge sum](https://ncatlab.org/nlab/show/wedge+sum). One can derive thistype as follows:
 
-You can imagine these three types as `Maybe (Either a b)`, `Maybe (a,b)`, and `Maybe (These a b)` respectively. It turns out that that each of these datatypes has special properties:
+    ```haskell
+    Either (Maybe a) (Maybe b)
+    ~ (1 + a) + (1 + b)
+    -- units are the same via pushout
+    ~ 1 + a + b
+    ~ Maybe (Either a b)
+    ~ Wedge a b
+    ```
 
-- the `Wedge` datatype represents the coproduct (like, `Either`) in the category Hask* of pointed Hask types, called a [wedge sum](https://ncatlab.org/nlab/show/wedge+sum). One can derive this by noting that units are the same in Haskell, and the sum of two pointed types is `(1 + a) + (1 + b) ~ 1 + a + b ~ Wedge a b`.
+ - [Can](https://hackage.haskell.org/package/smash/docs/Data-Can.html): Isomorphic to `Maybe (These a b)`. The `Can` datatype represents the product in Hask\*. One can derive this as follows:
 
-- the `Can` datatype represents the product (like, `(,)`) in Hask*. You can derive this by considering the product of two pointed types `(1 + a) * (1 + b) ~ 1 + a + b + a*b ~ Can a b`.
+    ```haskell
+    (Maybe a, Maybe a)
+    ~ (1 + a) * (1 + b)
+    -- products distribute over coproducts
+    ~ 1 + b + a + a*b
+    -- coproducts are associative
+    ~ 1 + (b + a + a*b)
+    ~ 1 + These a b
+    ~ Maybe (These a b)
+    ~ Can a b
+    ```
 
-- the `Smash` datatype represents a special type of product, a
-[smash product](https://ncatlab.org/nlab/show/smash+product), in the category Hask\*.  The smash product is a symmetric, monoidal tensor in Hask* that plays nicely with the product, 'Can', and coproduct, 'Wedge'.
+ - [Smash](https://hackage.haskell.org/package/smash/docs/Data-Smash.html): Isomorphic to `Maybe (a,b)`. The `Smash` datatype represents a special type of product, a
+[smash product](https://ncatlab.org/nlab/show/smash+product), in the category Hask\*.  The smash product is a symmetric, monoidal tensor in Hask* that is the quotient of `Can` over `Wedge`. It can be derive as follows:
 
-
-Pictorially, these datatypes look like this:
-
-```
-'Can':
-        a
-        |
-Non +---+---+ (a,b)
-        |
-        b
-
-'Wedge':
-                a
-                |
-Nowhere +-------+
-                |
-                b
-
-
-'Smash':
-
-
-Nada +--------+ (a,b)
-```
+    ```haskell
+    Can a b / Wedge a b
+    ~ 1 + a + b + a*b / 1 + a + b
+    -- def. of quotient
+    ~ 1 + a * b
+    ~ Smash a b
+    ```
