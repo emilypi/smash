@@ -30,11 +30,7 @@ source-repository head
 
 
 library
-  exposed-modules:
-                       Control.Monad.Trans.Can
-                     , Control.Monad.Trans.Smash
-                     , Control.Monad.Trans.Wedge
-                     , Data.Can
+  exposed-modules:     Data.Can
                      , Data.Smash
                      , Data.Wedge
 
