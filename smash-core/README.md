@@ -3,7 +3,8 @@
 [![Build Status](https://travis-ci.com/emilypi/smash.svg?branch=master)](https://travis-ci.com/emilypi/smash)
 [![Hackage](https://img.shields.io/hackage/v/smash.svg)](https://hackage.haskell.org/package/smash)
 
-This package consists of 3 datatypes:
+This package consists of 3 interesting datatypes and their respective monad transformers:
+
  - [Wedge](https://hackage.haskell.org/package/smash/docs/Data-Wedge.html): Isomorphic to `Maybe (Either a b)`. The `Wedge` datatype represents the coproduct in the category Hask\* of pointed Hask types, called a [wedge sum](https://ncatlab.org/nlab/show/wedge+sum). One can derive thistype as follows:
 
     ```haskell
