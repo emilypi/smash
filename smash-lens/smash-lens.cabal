@@ -1,52 +1,56 @@
-cabal-version:       2.0
-
-
-name:                smash-lens
-version:             0.1.0.0
-synopsis:            Optics for the `smash` library
+cabal-version:      2.0
+name:               smash-lens
+version:            0.1.0.0
+synopsis:           Optics for the `smash` library
 description:
   Prisms, Traversals, and combinators for the `smash` library.
 
-homepage:            https://github.com/emilypi/smash
-bug-reports:         https://github.com/emilypi/smash/issues
-license:             BSD3
-license-file:        LICENSE
-author:              Emily Pillmore
-maintainer:          emilypi@cohomolo.gy
-copyright:           (c) 2020 Emily Pillmore <emilypi@cohomolo.gy>
-category:            Data
-build-type:          Simple
+homepage:           https://github.com/emilypi/smash
+bug-reports:        https://github.com/emilypi/smash/issues
+license:            BSD3
+license-file:       LICENSE
+author:             Emily Pillmore
+maintainer:         emilypi@cohomolo.gy
+copyright:          (c) 2020 Emily Pillmore <emilypi@cohomolo.gy>
+category:           Data
+build-type:         Simple
 extra-source-files:
   CHANGELOG.md
   README.md
 
-
 tested-with:
-  GHC ==8.2.2 || ==8.4.3 || ==8.4.4 || ==8.6.3 || ==8.6.5 || ==8.8.3 || ==8.10.1
-
+  GHC ==8.2.2
+   || ==8.4.3
+   || ==8.4.4
+   || ==8.6.3
+   || ==8.6.5
+   || ==8.8.3
+   || ==8.10.1
 
 source-repository head
   type:     git
   location: https://github.com/emilypi/smash.git
 
 library
-  exposed-modules:     Data.Can.Lens
-                     , Data.Smash.Lens
-                     , Data.Wedge.Lens
+  exposed-modules:
+    Data.Can.Lens
+    Data.Smash.Lens
+    Data.Wedge.Lens
+
   -- other-modules:
   -- other-extensions:
-  build-depends:       base >=4.10 && <5.0
-                     , lens >=4.0  && <5.0
-                     , smash ^>= 0.1
+  build-depends:
+      base   >=4.10 && <5.0
+    , lens   >=4.0  && <5.0
+    , smash  ^>=0.1
 
-  hs-source-dirs:      src
-  default-language:    Haskell2010
-
-  ghc-options:         -Wall
+  hs-source-dirs:   src
+  default-language: Haskell2010
+  ghc-options:      -Wall
 
 test-suite smash-lens-test
-  default-language:    Haskell2010
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             MyLibTest.hs
-  build-depends:       base >=4.10 && <5.0
+  default-language: Haskell2010
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  main-is:          MyLibTest.hs
+  build-depends:    base >=4.10 && <5.0
