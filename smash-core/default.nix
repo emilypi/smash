@@ -9,14 +9,13 @@ let
       }:
       mkDerivation {
         pname = "smash";
-        version = "0.1.1.0";
+        version = "0.1.2.0";
         src = ./.;
         libraryHaskellDepends = [
           base bifunctors binary deepseq hashable
         ];
-        testHaskellDepends = [ base ];
         homepage = "https://github.com/emilypi/smash";
-        description = "Smash products - like 'These', but with a unit!";
+        description = "Combinators for Maybe types";
         license = stdenv.lib.licenses.bsd3;
       };
 
