@@ -3,6 +3,7 @@ packages:
  , smash-core
  , smash-lens
  , smash-microlens
+ , smash-optics
 
 
 tests: True
