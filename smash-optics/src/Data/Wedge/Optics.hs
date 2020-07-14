@@ -26,10 +26,13 @@ module Data.Wedge.Optics
 ) where
 
 
+import Data.Wedge
+
+import Optics.Each.Core
+import Optics.Iso
+import Optics.IxTraversal
 import Optics.Prism
 import Optics.Traversal
-
-import Data.Wedge
 
 
 -- ------------------------------------------------------------------- --
@@ -45,7 +48,7 @@ import Data.Wedge
 -- There 'a'
 --
 here :: Traversal' (Wedge a b) a
-here f = \case
+here = traversalVL $ \f -> \case
   Nowhere -> pure Nowhere
   Here a -> Here <$> f a
   There b -> pure (There b)
@@ -60,7 +63,7 @@ here f = \case
 -- There "'a'"
 --
 there :: Traversal' (Wedge a b) b
-there f = \case
+there = traversalVL $ \f -> \case
   Nowhere -> pure Nowhere
   Here a -> pure (Here a)
   There b -> There <$> f b
@@ -97,3 +100,15 @@ _There = prism There $ \case
   There b -> Right b
   Here a -> Left (Here a)
   Nowhere -> Left (Nowhere)
+
+-- ------------------------------------------------------------------- --
+-- Orphans
+
+instance Swapped Wedge where
+  swapped = iso swapWedge swapWedge
+
+instance (a ~ a', b ~ b') => Each (Maybe Bool) (Wedge a a') (Wedge b b') a b where
+  each = itraversalVL $ \f -> \case
+    Here a -> Here <$> f (Just True) a
+    There b -> There <$> f (Just False) b
+    Nowhere -> pure Nowhere

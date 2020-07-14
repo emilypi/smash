@@ -25,16 +25,19 @@ module Data.Smash.Optics
 ) where
 
 
+import Optics.Each.Core
+import Optics.Iso
+import Optics.IxTraversal
 import Optics.Prism
 import Optics.Traversal
 
 import Data.Smash
 
+
 -- ------------------------------------------------------------------- --
 -- Traversals
 
--- | A 'Optics.Traversal' of the smashed pair, suitable for use
--- with "Optics".
+-- | A 'Optics.Traversal' of the smashed pair.
 --
 -- >>> over smashed show (Smash 1 2)
 -- "(1,2)"
@@ -43,12 +46,12 @@ import Data.Smash
 -- Nada
 --
 smashed :: Traversal (Smash a b) (Smash c d) (a,b) (c,d)
-smashed f = \case
+smashed = traversalVL $ \f -> \case
   Nada -> pure Nada
   Smash a b -> uncurry Smash <$> f (a,b)
 
 -- | A 'Optics.Traversal' of the smashed pair, suitable for use
--- with "Optics".
+-- with "Control.Optics".
 --
 -- >>> over smashing show (Smash 1 2)
 -- Smash "1" "2"
@@ -56,8 +59,10 @@ smashed f = \case
 -- >>> over smashing show Nada
 -- Nada
 --
-smashing :: Traversal (Smash a a) (Smash b b) a b
-smashing = smashed . both
+smashing :: IxTraversal (Maybe Bool) (Smash a a) (Smash b b) a b
+smashing = itraversalVL $ \f -> \case
+  Nada -> pure Nada
+  Smash a b -> Smash <$> f (Just True) a <*> f (Just False) b
 
 -- ------------------------------------------------------------------- --
 -- Prisms
@@ -79,3 +84,13 @@ _Smash :: Prism' (Smash a b) (a,b)
 _Smash = prism (uncurry Smash) $ \case
   Smash a b -> Right (a,b)
   Nada -> Left Nada
+
+
+-- ------------------------------------------------------------------- --
+-- Orphans
+
+instance Swapped Smash where
+  swapped = iso swapSmash swapSmash
+
+instance (a ~ a', b ~ b') => Each (Maybe Bool) (Smash a a') (Smash b b') a b where
+  each = smashing

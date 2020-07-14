@@ -29,49 +29,52 @@ module Data.Can.Optics
 ) where
 
 
+import Data.Can
+
+import Optics.Each.Core
+import Optics.Iso
+import Optics.IxTraversal
 import Optics.Prism
 import Optics.Traversal
-
-import Data.Can
 
 -- ------------------------------------------------------------------- --
 -- Traversals
 
--- | A 'Optics.Traversal' of the first parameter, suitable for use
--- with "Optics".
+-- | A 'Control.Lens.Traversal' of the first parameter, suitable for use
+-- with "Control.Lens".
 --
 oneing :: Traversal (Can a c) (Can b c) a b
-oneing f = \case
+oneing = traversalVL $ \f -> \case
   Non -> pure Non
   One a -> One <$> f a
   Eno c -> pure (Eno c)
   Two a c -> flip Two c <$> f a
 
--- | A 'Optics.Traversal' of the second parameter, suitable for use
--- with "Optics".
+-- | A 'Control.Lens.Traversal' of the second parameter, suitable for use
+-- with "Control.Lens".
 --
 enoing :: Traversal (Can a b) (Can a c) b c
-enoing f = \case
+enoing = traversalVL $ \f -> \case
   Non -> pure Non
   One a -> pure (One a)
   Eno b -> Eno <$> f b
   Two a b -> Two a <$> f b
 
--- | A 'Optics.Traversal' of the pair, suitable for use
--- with "Optics".
+-- | A 'Control.Lens.Traversal' of the pair, suitable for use
+-- with "Control.Lens".
 --
 twoed :: Traversal' (Can a b) (a,b)
-twoed f = \case
+twoed = traversalVL $ \f -> \case
   Non -> pure Non
   One a -> pure (One a)
   Eno b -> pure (Eno b)
   Two a b -> uncurry Two <$> f (a,b)
 
--- | A 'Optics.Traversal' of the pair ala 'both', suitable for use
--- with "Optics".
+-- | A 'Control.Lens.Traversal' of the pair ala 'both', suitable for use
+-- with "Control.Lens".
 --
 twoing :: Traversal (Can a a) (Can b b) a b
-twoing f = \case
+twoing = traversalVL $ \f -> \case
   Non -> pure Non
   One a -> One <$> f a
   Eno a -> Eno <$> f a
@@ -80,7 +83,7 @@ twoing f = \case
 -- ------------------------------------------------------------------- --
 -- Prisms
 
--- | A 'Optics.Prism'' selecting the 'Non' constructor.
+-- | A 'Control.Lens.Prism'' selecting the 'Non' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -91,7 +94,7 @@ _Non = prism (const Non) $ \case
   Eno b -> Left (Eno b)
   Two a b -> Left (Two a b)
 
--- | A 'Optics.Prism'' selecting the 'One' constructor.
+-- | A 'Control.Lens.Prism'' selecting the 'One' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -102,7 +105,7 @@ _One = prism One $ \case
   Eno b -> Left (Eno b)
   Two a b -> Left (Two a b)
 
--- | A 'Optics.Prism'' selecting the 'Eno' constructor.
+-- | A 'Control.Lens.Prism'' selecting the 'Eno' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -113,7 +116,7 @@ _Eno = prism Eno $ \case
   Eno b -> Right b
   Two a b -> Left (Two a b)
 
--- | A 'Optics.Prism'' selecting the 'Two' constructor.
+-- | A 'Control.Lens.Prism'' selecting the 'Two' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -123,3 +126,16 @@ _Two = prism (uncurry Two) $ \case
   One a -> Left (One a)
   Eno b -> Left (Eno b)
   Two a b -> Right (a,b)
+
+-- ------------------------------------------------------------------- --
+-- Orphans
+
+instance Swapped Can where
+  swapped = iso swapCan swapCan
+
+instance (a ~ a', b ~ b') => Each (Maybe Bool) (Can a a') (Can b b') a b where
+  each = itraversalVL $ \f -> \case
+    Non -> pure Non
+    One a -> One <$> f (Just True) a
+    Eno a -> Eno <$> f (Just False) a
+    Two a b -> Two <$> f (Just True) a <*> f (Just False) b
