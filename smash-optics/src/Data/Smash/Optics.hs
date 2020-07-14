@@ -50,8 +50,7 @@ smashed = traversalVL $ \f -> \case
   Nada -> pure Nada
   Smash a b -> uncurry Smash <$> f (a,b)
 
--- | A 'Optics.Traversal' of the smashed pair, suitable for use
--- with "Control.Optics".
+-- | A 'Optics.Traversal' of the smashed pair.
 --
 -- >>> over smashing show (Smash 1 2)
 -- Smash "1" "2"
