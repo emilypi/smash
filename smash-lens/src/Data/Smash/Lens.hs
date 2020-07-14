@@ -35,10 +35,10 @@ import Data.Smash
 -- | A 'Control.Lens.Traversal' of the smashed pair, suitable for use
 -- with "Control.Lens".
 --
--- >>> over smashed show (Smash 1 2)
--- "(1,2)"
+-- >>> over smashed (fmap pred) (Smash 1 2)
+-- Smash 1 1
 --
--- >>> over smashed show Nada
+-- >>> over smashed id Nada
 -- Nada
 --
 smashed :: Traversal (Smash a b) (Smash c d) (a,b) (c,d)
