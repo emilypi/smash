@@ -40,8 +40,8 @@ import Optics.Traversal
 -- ------------------------------------------------------------------- --
 -- Traversals
 
--- | A 'Control.Lens.Traversal' of the first parameter, suitable for use
--- with "Control.Lens".
+-- | A 'Optics.Traversal' of the first parameter, suitable for use
+-- with "Optics".
 --
 oneing :: Traversal (Can a c) (Can b c) a b
 oneing = traversalVL $ \f -> \case
@@ -50,8 +50,8 @@ oneing = traversalVL $ \f -> \case
   Eno c -> pure (Eno c)
   Two a c -> flip Two c <$> f a
 
--- | A 'Control.Lens.Traversal' of the second parameter, suitable for use
--- with "Control.Lens".
+-- | A 'Optics.Traversal' of the second parameter, suitable for use
+-- with "Optics".
 --
 enoing :: Traversal (Can a b) (Can a c) b c
 enoing = traversalVL $ \f -> \case
@@ -60,8 +60,8 @@ enoing = traversalVL $ \f -> \case
   Eno b -> Eno <$> f b
   Two a b -> Two a <$> f b
 
--- | A 'Control.Lens.Traversal' of the pair, suitable for use
--- with "Control.Lens".
+-- | A 'Optics.Traversal' of the pair, suitable for use
+-- with "Optics".
 --
 twoed :: Traversal' (Can a b) (a,b)
 twoed = traversalVL $ \f -> \case
@@ -70,8 +70,8 @@ twoed = traversalVL $ \f -> \case
   Eno b -> pure (Eno b)
   Two a b -> uncurry Two <$> f (a,b)
 
--- | A 'Control.Lens.Traversal' of the pair ala 'both', suitable for use
--- with "Control.Lens".
+-- | A 'Optics.Traversal' of the pair ala 'both', suitable for use
+-- with "Optics".
 --
 twoing :: Traversal (Can a a) (Can b b) a b
 twoing = traversalVL $ \f -> \case
@@ -83,7 +83,7 @@ twoing = traversalVL $ \f -> \case
 -- ------------------------------------------------------------------- --
 -- Prisms
 
--- | A 'Control.Lens.Prism'' selecting the 'Non' constructor.
+-- | A 'Optics.Prism'' selecting the 'Non' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -94,7 +94,7 @@ _Non = prism (const Non) $ \case
   Eno b -> Left (Eno b)
   Two a b -> Left (Two a b)
 
--- | A 'Control.Lens.Prism'' selecting the 'One' constructor.
+-- | A 'Optics.Prism'' selecting the 'One' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -105,7 +105,7 @@ _One = prism One $ \case
   Eno b -> Left (Eno b)
   Two a b -> Left (Two a b)
 
--- | A 'Control.Lens.Prism'' selecting the 'Eno' constructor.
+-- | A 'Optics.Prism'' selecting the 'Eno' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -116,7 +116,7 @@ _Eno = prism Eno $ \case
   Eno b -> Right b
   Two a b -> Left (Two a b)
 
--- | A 'Control.Lens.Prism'' selecting the 'Two' constructor.
+-- | A 'Optics.Prism'' selecting the 'Two' constructor.
 --
 -- /Note:/ cannot change type.
 --
