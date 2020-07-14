@@ -63,6 +63,8 @@ enoing = traversalVL $ \f -> \case
 -- | A 'Optics.Traversal' of the pair, suitable for use
 -- with "Optics".
 --
+-- /Note:/ cannot change type.
+--
 twoed :: Traversal' (Can a b) (a,b)
 twoed = traversalVL $ \f -> \case
   Non -> pure Non

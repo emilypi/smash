@@ -47,7 +47,7 @@ import Optics.Traversal
 -- >>> over here show (There 'a')
 -- There 'a'
 --
-here :: Traversal' (Wedge a b) a
+here :: Traversal (Wedge a b) (Wedge a' b) a a'
 here = traversalVL $ \f -> \case
   Nowhere -> pure Nowhere
   Here a -> Here <$> f a
@@ -62,7 +62,7 @@ here = traversalVL $ \f -> \case
 -- >>> over there show (There 'a')
 -- There "'a'"
 --
-there :: Traversal' (Wedge a b) b
+there :: Traversal (Wedge a b) (Wedge a b') b b'
 there = traversalVL $ \f -> \case
   Nowhere -> pure Nowhere
   Here a -> pure (Here a)
@@ -73,7 +73,7 @@ there = traversalVL $ \f -> \case
 
 -- | A 'Optics.Prism'' selecting the 'Nowhere' constructor.
 --
--- /Note:/ cannot change type.
+-- /Note:/ this optic cannot change type.
 --
 _Nowhere :: Prism' (Wedge a b) ()
 _Nowhere = prism (const Nowhere) $ \case
@@ -83,8 +83,6 @@ _Nowhere = prism (const Nowhere) $ \case
 
 -- | A 'Optics.Prism'' selecting the 'Here' constructor.
 --
--- /Note:/ cannot change type.
---
 _Here :: Prism (Wedge a b) (Wedge c b) a c
 _Here = prism Here $ \case
   Here a -> Right a
@@ -92,8 +90,6 @@ _Here = prism Here $ \case
   Nowhere -> Left Nowhere
 
 -- | A 'Optics.Prism'' selecting the 'There' constructor.
---
--- /Note:/ cannot change type.
 --
 _There :: Prism (Wedge a b) (Wedge a d) b d
 _There = prism There $ \case
