@@ -28,17 +28,17 @@ module Data.Wedge.Optics
 
 import Data.Wedge
 
+import Optics.AffineTraversal
 import Optics.Each.Core
 import Optics.Iso
 import Optics.IxTraversal
 import Optics.Prism
-import Optics.Traversal
 
 
 -- ------------------------------------------------------------------- --
 -- Traversals
 
--- | A 'Optics.Traversal' of the 'Here' case of a 'Wedge',
+-- | An 'AffineTraversal' of the 'Here' case of a 'Wedge',
 -- suitable for use with "Optics".
 --
 -- >>> over here show (Here 1)
@@ -47,13 +47,13 @@ import Optics.Traversal
 -- >>> over here show (There 'a')
 -- There 'a'
 --
-here :: Traversal (Wedge a b) (Wedge a' b) a a'
-here = traversalVL $ \f -> \case
-  Nowhere -> pure Nowhere
+here :: AffineTraversal (Wedge a b) (Wedge a' b) a a'
+here = atraversalVL $ \point f -> \case
+  Nowhere -> point Nowhere
   Here a -> Here <$> f a
-  There b -> pure (There b)
+  There b -> point (There b)
 
--- | A 'Optics.Traversal' of the 'There' case of a 'Wedge',
+-- | An 'AffineTraversal' of the 'There' case of a 'Wedge',
 -- suitable for use with "Optics".
 --
 -- >>> over there show (Here 1)
@@ -62,16 +62,16 @@ here = traversalVL $ \f -> \case
 -- >>> over there show (There 'a')
 -- There "'a'"
 --
-there :: Traversal (Wedge a b) (Wedge a b') b b'
-there = traversalVL $ \f -> \case
-  Nowhere -> pure Nowhere
-  Here a -> pure (Here a)
+there :: AffineTraversal (Wedge a b) (Wedge a b') b b'
+there = atraversalVL $ \point f -> \case
+  Nowhere -> point Nowhere
+  Here a -> point (Here a)
   There b -> There <$> f b
 
 -- ------------------------------------------------------------------- --
 -- Prisms
 
--- | A 'Optics.Prism'' selecting the 'Nowhere' constructor.
+-- | A 'Prism'' selecting the 'Nowhere' constructor.
 --
 -- /Note:/ this optic cannot change type.
 --
@@ -81,7 +81,7 @@ _Nowhere = prism (const Nowhere) $ \case
   Here a -> Left (Here a)
   There b -> Left (There b)
 
--- | A 'Optics.Prism'' selecting the 'Here' constructor.
+-- | A 'Prism'' selecting the 'Here' constructor.
 --
 _Here :: Prism (Wedge a b) (Wedge c b) a c
 _Here = prism Here $ \case
@@ -89,7 +89,7 @@ _Here = prism Here $ \case
   There b -> Left (There b)
   Nowhere -> Left Nowhere
 
--- | A 'Optics.Prism'' selecting the 'There' constructor.
+-- | A 'Prism'' selecting the 'There' constructor.
 --
 _There :: Prism (Wedge a b) (Wedge a d) b d
 _There = prism There $ \case

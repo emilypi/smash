@@ -31,6 +31,7 @@ module Data.Can.Optics
 
 import Data.Can
 
+import Optics.AffineTraversal
 import Optics.Each.Core
 import Optics.Iso
 import Optics.IxTraversal
@@ -40,39 +41,39 @@ import Optics.Traversal
 -- ------------------------------------------------------------------- --
 -- Traversals
 
--- | A 'Optics.Traversal' of the first parameter, suitable for use
+-- | An 'AffineTraversal' of the first parameter, suitable for use
 -- with "Optics".
 --
-oneing :: Traversal (Can a c) (Can b c) a b
-oneing = traversalVL $ \f -> \case
-  Non -> pure Non
+oneing :: AffineTraversal (Can a c) (Can b c) a b
+oneing = atraversalVL $ \point f -> \case
+  Non -> point Non
   One a -> One <$> f a
-  Eno c -> pure (Eno c)
+  Eno c -> point (Eno c)
   Two a c -> flip Two c <$> f a
 
--- | A 'Optics.Traversal' of the second parameter, suitable for use
+-- | An 'AffineTraversal' of the second parameter, suitable for use
 -- with "Optics".
 --
-enoing :: Traversal (Can a b) (Can a c) b c
-enoing = traversalVL $ \f -> \case
-  Non -> pure Non
-  One a -> pure (One a)
+enoing :: AffineTraversal (Can a b) (Can a c) b c
+enoing = atraversalVL $ \point f -> \case
+  Non -> point Non
+  One a -> point (One a)
   Eno b -> Eno <$> f b
   Two a b -> Two a <$> f b
 
--- | A 'Optics.Traversal' of the pair, suitable for use
+-- | An 'AffineTraversal' of the pair, suitable for use
 -- with "Optics".
 --
 -- /Note:/ cannot change type.
 --
-twoed :: Traversal' (Can a b) (a,b)
-twoed = traversalVL $ \f -> \case
-  Non -> pure Non
-  One a -> pure (One a)
-  Eno b -> pure (Eno b)
+twoed :: AffineTraversal' (Can a b) (a,b)
+twoed = atraversalVL $ \point f -> \case
+  Non -> point Non
+  One a -> point (One a)
+  Eno b -> point (Eno b)
   Two a b -> uncurry Two <$> f (a,b)
 
--- | A 'Optics.Traversal' of the pair ala 'both', suitable for use
+-- | A 'Traversal' of the pair ala 'both', suitable for use
 -- with "Optics".
 --
 twoing :: Traversal (Can a a) (Can b b) a b
@@ -85,7 +86,7 @@ twoing = traversalVL $ \f -> \case
 -- ------------------------------------------------------------------- --
 -- Prisms
 
--- | A 'Optics.Prism'' selecting the 'Non' constructor.
+-- | A 'Prism'' selecting the 'Non' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -96,7 +97,7 @@ _Non = prism (const Non) $ \case
   Eno b -> Left (Eno b)
   Two a b -> Left (Two a b)
 
--- | A 'Optics.Prism'' selecting the 'One' constructor.
+-- | A 'Prism'' selecting the 'One' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -107,7 +108,7 @@ _One = prism One $ \case
   Eno b -> Left (Eno b)
   Two a b -> Left (Two a b)
 
--- | A 'Optics.Prism'' selecting the 'Eno' constructor.
+-- | A 'Prism'' selecting the 'Eno' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -118,7 +119,7 @@ _Eno = prism Eno $ \case
   Eno b -> Right b
   Two a b -> Left (Two a b)
 
--- | A 'Optics.Prism'' selecting the 'Two' constructor.
+-- | A 'Prism'' selecting the 'Two' constructor.
 --
 -- /Note:/ cannot change type.
 --
