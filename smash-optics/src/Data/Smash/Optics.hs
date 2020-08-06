@@ -25,11 +25,11 @@ module Data.Smash.Optics
 ) where
 
 
+import Optics.AffineTraversal
 import Optics.Each.Core
 import Optics.Iso
 import Optics.IxTraversal
 import Optics.Prism
-import Optics.Traversal
 
 import Data.Smash
 
@@ -37,7 +37,7 @@ import Data.Smash
 -- ------------------------------------------------------------------- --
 -- Traversals
 
--- | A 'Optics.Traversal' of the smashed pair.
+-- | An 'AffineTraversal' of the smashed pair.
 --
 -- >>> over smashed (fmap pred) (Smash 1 2)
 -- Smash 1 1
@@ -45,12 +45,12 @@ import Data.Smash
 -- >>> over smashed id Nada
 -- Nada
 --
-smashed :: Traversal (Smash a b) (Smash c d) (a,b) (c,d)
-smashed = traversalVL $ \f -> \case
-  Nada -> pure Nada
+smashed :: AffineTraversal (Smash a b) (Smash c d) (a,b) (c,d)
+smashed = atraversalVL $ \point f -> \case
+  Nada -> point Nada
   Smash a b -> uncurry Smash <$> f (a,b)
 
--- | A 'Optics.Traversal' of the smashed pair.
+-- | An 'IxTraversal' of the smashed pair.
 --
 -- >>> over smashing show (Smash 1 2)
 -- Smash "1" "2"
@@ -66,7 +66,7 @@ smashing = itraversalVL $ \f -> \case
 -- ------------------------------------------------------------------- --
 -- Prisms
 
--- | A 'Optics.Prism'' selecting the 'Nada' constructor.
+-- | A 'Prism'' selecting the 'Nada' constructor.
 --
 -- /Note:/ cannot change type.
 --
@@ -75,7 +75,7 @@ _Nada = prism (const Nada) $ \case
   Nada -> Right ()
   Smash a b -> Left (Smash a b)
 
--- | A 'Optics.Prism'' selecting the 'Smash' constructor.
+-- | A 'Prism'' selecting the 'Smash' constructor.
 --
 -- /Note:/ cannot change type.
 --
