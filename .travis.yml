@@ -8,7 +8,7 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.10.1
+# version: 0.10.2
 #
 version: ~> 1.0
 language: c
@@ -105,6 +105,7 @@ install:
     echo "packages: smash-core" >> cabal.project
     echo "packages: smash-lens" >> cabal.project
     echo "packages: smash-microlens" >> cabal.project
+    echo "packages: smash-optics" >> cabal.project
   - echo 'package smash-aeson' >> cabal.project
   - "echo '  ghc-options: -Werror=missing-methods' >> cabal.project"
   - echo 'package smash' >> cabal.project
@@ -113,15 +114,18 @@ install:
   - "echo '  ghc-options: -Werror=missing-methods' >> cabal.project"
   - echo 'package smash-microlens' >> cabal.project
   - "echo '  ghc-options: -Werror=missing-methods' >> cabal.project"
+  - echo 'package smash-optics' >> cabal.project
+  - "echo '  ghc-options: -Werror=missing-methods' >> cabal.project"
   - |
     echo "optimization: False" >> cabal.project
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(smash|smash-aeson|smash-lens|smash-microlens)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(smash|smash-aeson|smash-lens|smash-microlens|smash-optics)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   - if [ -f "smash-aeson/configure.ac" ]; then (cd "smash-aeson" && autoreconf -i); fi
   - if [ -f "smash-core/configure.ac" ]; then (cd "smash-core" && autoreconf -i); fi
   - if [ -f "smash-lens/configure.ac" ]; then (cd "smash-lens" && autoreconf -i); fi
   - if [ -f "smash-microlens/configure.ac" ]; then (cd "smash-microlens" && autoreconf -i); fi
+  - if [ -f "smash-optics/configure.ac" ]; then (cd "smash-optics" && autoreconf -i); fi
   - ${CABAL} v2-freeze $WITHCOMPILER ${TEST} ${BENCH}
   - "cat cabal.project.freeze | sed -E 's/^(constraints: *| *)//' | sed 's/any.//'"
   - rm  cabal.project.freeze
@@ -140,6 +144,7 @@ script:
   - PKGDIR_smash="$(find . -maxdepth 1 -type d -regex '.*/smash-[0-9.]*')"
   - PKGDIR_smash_lens="$(find . -maxdepth 1 -type d -regex '.*/smash-lens-[0-9.]*')"
   - PKGDIR_smash_microlens="$(find . -maxdepth 1 -type d -regex '.*/smash-microlens-[0-9.]*')"
+  - PKGDIR_smash_optics="$(find . -maxdepth 1 -type d -regex '.*/smash-optics-[0-9.]*')"
   # Generate cabal.project
   - rm -rf cabal.project cabal.project.local cabal.project.freeze
   - touch cabal.project
@@ -148,6 +153,7 @@ script:
     echo "packages: ${PKGDIR_smash}" >> cabal.project
     echo "packages: ${PKGDIR_smash_lens}" >> cabal.project
     echo "packages: ${PKGDIR_smash_microlens}" >> cabal.project
+    echo "packages: ${PKGDIR_smash_optics}" >> cabal.project
   - echo 'package smash-aeson' >> cabal.project
   - "echo '  ghc-options: -Werror=missing-methods' >> cabal.project"
   - echo 'package smash' >> cabal.project
@@ -156,9 +162,11 @@ script:
   - "echo '  ghc-options: -Werror=missing-methods' >> cabal.project"
   - echo 'package smash-microlens' >> cabal.project
   - "echo '  ghc-options: -Werror=missing-methods' >> cabal.project"
+  - echo 'package smash-optics' >> cabal.project
+  - "echo '  ghc-options: -Werror=missing-methods' >> cabal.project"
   - |
     echo "optimization: False" >> cabal.project
-  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(smash|smash-aeson|smash-lens|smash-microlens)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
+  - "for pkg in $($HCPKG list --simple-output); do echo $pkg | sed 's/-[^-]*$//' | (grep -vE -- '^(smash|smash-aeson|smash-lens|smash-microlens|smash-optics)$' || true) | sed 's/^/constraints: /' | sed 's/$/ installed/' >> cabal.project.local; done"
   - cat cabal.project || true
   - cat cabal.project.local || true
   # Building...
@@ -174,11 +182,12 @@ script:
   - (cd ${PKGDIR_smash} && ${CABAL} -vnormal check)
   - (cd ${PKGDIR_smash_lens} && ${CABAL} -vnormal check)
   - (cd ${PKGDIR_smash_microlens} && ${CABAL} -vnormal check)
+  - (cd ${PKGDIR_smash_optics} && ${CABAL} -vnormal check)
   # haddock...
   - ${CABAL} v2-haddock $WITHCOMPILER --with-haddock $HADDOCK ${TEST} ${BENCH} all
   # Building without installed constraints for packages in global-db...
   - rm -f cabal.project.local
   - ${CABAL} v2-build $WITHCOMPILER --disable-tests --disable-benchmarks all
 
-# REGENDATA ("0.10.1",["cabal.project","--output",".travis.yml"])
+# REGENDATA ("0.10.2",["cabal.project","--output",".travis.yml"])
 # EOF
