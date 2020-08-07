@@ -103,8 +103,8 @@ _There = prism There $ \case
 instance Swapped Wedge where
   swapped = iso swapWedge swapWedge
 
-instance (a ~ a', b ~ b') => Each (Maybe Bool) (Wedge a a') (Wedge b b') a b where
+instance (a ~ a', b ~ b') => Each Bool (Wedge a a') (Wedge b b') a b where
   each = itraversalVL $ \f -> \case
-    Here a -> Here <$> f (Just True) a
-    There b -> There <$> f (Just False) b
+    Here a -> Here <$> f True a
+    There b -> There <$> f False b
     Nowhere -> pure Nowhere

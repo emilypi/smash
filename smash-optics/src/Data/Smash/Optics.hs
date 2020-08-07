@@ -50,7 +50,8 @@ smashed = atraversalVL $ \point f -> \case
   Nada -> point Nada
   Smash a b -> uncurry Smash <$> f (a,b)
 
--- | An 'IxTraversal' of the smashed pair.
+-- | An 'IxTraversal' of the smashed pair. Yes this is equivalent to 'each'.
+-- It's here because it's __smashing__.
 --
 -- >>> over smashing show (Smash 1 2)
 -- Smash "1" "2"
@@ -58,10 +59,10 @@ smashed = atraversalVL $ \point f -> \case
 -- >>> over smashing show Nada
 -- Nada
 --
-smashing :: IxTraversal (Maybe Bool) (Smash a a) (Smash b b) a b
+smashing :: IxTraversal Bool (Smash a a) (Smash b b) a b
 smashing = itraversalVL $ \f -> \case
   Nada -> pure Nada
-  Smash a b -> Smash <$> f (Just True) a <*> f (Just False) b
+  Smash a b -> Smash <$> f True a <*> f False b
 
 -- ------------------------------------------------------------------- --
 -- Prisms
@@ -91,5 +92,5 @@ _Smash = prism (uncurry Smash) $ \case
 instance Swapped Smash where
   swapped = iso swapSmash swapSmash
 
-instance (a ~ a', b ~ b') => Each (Maybe Bool) (Smash a a') (Smash b b') a b where
+instance (a ~ a', b ~ b') => Each Bool (Smash a a') (Smash b b') a b where
   each = smashing

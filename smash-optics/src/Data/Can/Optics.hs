@@ -136,9 +136,9 @@ _Two = prism (uncurry Two) $ \case
 instance Swapped Can where
   swapped = iso swapCan swapCan
 
-instance (a ~ a', b ~ b') => Each (Maybe Bool) (Can a a') (Can b b') a b where
+instance (a ~ a', b ~ b') => Each Bool (Can a a') (Can b b') a b where
   each = itraversalVL $ \f -> \case
     Non -> pure Non
-    One a -> One <$> f (Just True) a
-    Eno a -> Eno <$> f (Just False) a
-    Two a b -> Two <$> f (Just True) a <*> f (Just False) b
+    One a -> One <$> f True a
+    Eno a -> Eno <$> f False a
+    Two a b -> Two <$> f True a <*> f False b
