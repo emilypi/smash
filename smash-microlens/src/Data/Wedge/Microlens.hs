@@ -29,6 +29,10 @@ import Lens.Micro
 
 import Data.Wedge
 
+
+-- ------------------------------------------------------------------- --
+-- Traversals
+
 -- | A 'Control.Lens.Traversal' of the 'Here' case of a 'Wedge',
 -- suitable for use with "Control.Lens".
 --

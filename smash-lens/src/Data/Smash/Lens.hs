@@ -16,8 +16,10 @@
 -- 'Prism's and 'Traversal's for the 'Smash' datatype.
 --
 module Data.Smash.Lens
-( -- * Prisms
-  _Nada
+( -- * Isos
+  _SmashIso
+  -- * Prisms
+, _Nada
 , _Smash
    -- * Traversals
 , smashed
@@ -28,6 +30,21 @@ module Data.Smash.Lens
 import Control.Lens
 
 import Data.Smash
+
+
+-- ------------------------------------------------------------------- --
+-- Isos
+
+-- | A 'Control.Lens.Iso' between a smash product and pointed tuple.
+--
+_SmashIso :: Iso (Smash a b) (Smash c d) (Maybe (a,b)) (Maybe (c,d))
+_SmashIso = iso f g
+  where
+    f Nada = Nothing
+    f (Smash a b) = Just (a,b)
+
+    g Nothing = Nada
+    g (Just (a,b)) = Smash a b
 
 -- ------------------------------------------------------------------- --
 -- Traversals

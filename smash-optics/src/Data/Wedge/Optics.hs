@@ -16,8 +16,10 @@
 -- 'Prism's and 'Traversal's for the 'Wedge' datatype.
 --
 module Data.Wedge.Optics
-( -- * Traversals
-  here
+( -- * Isos
+  _WedgeIso
+  -- * Traversals
+, here
 , there
   -- * Prisms
 , _Nowhere
@@ -34,6 +36,22 @@ import Optics.Iso
 import Optics.IxTraversal
 import Optics.Prism
 
+
+-- ------------------------------------------------------------------- --
+-- Isos
+
+-- | A 'Control.Lens.Iso' between a wedge sum and pointed coproduct.
+--
+_WedgeIso :: Iso (Wedge a b) (Wedge c d) (Maybe (Either a b)) (Maybe (Either c d))
+_WedgeIso = iso f g
+  where
+    f Nowhere = Nothing
+    f (Here a) = Just (Left a)
+    f (There b) = Just (Right b)
+
+    g Nothing = Nowhere
+    g (Just (Left a)) = Here a
+    g (Just (Right b)) = There b
 
 -- ------------------------------------------------------------------- --
 -- Traversals
