@@ -1,6 +1,6 @@
 cabal-version:      2.0
 name:               smash-microlens
-version:            0.1.0.0
+version:            0.1.0.1
 synopsis:           Optics for the `smash` library
 description:        Optics for the `smash` library using `microlens`
 homepage:           https://github.com/emilypi/smash
