@@ -63,7 +63,7 @@ module Data.Smash
 import Control.Applicative (Alternative(..))
 import Control.DeepSeq (NFData(..))
 
-import Data.Bifunctor
+import Data.Biapplicative
 import Data.Bifoldable
 import Data.Binary (Binary(..))
 import Data.Bitraversable
@@ -78,7 +78,7 @@ import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
-import Internal
+import Data.Smash.Internal
 
 {- $general
 
@@ -422,6 +422,12 @@ instance Bifunctor Smash where
   bimap f g = \case
     Nada -> Nada
     Smash a b -> Smash (f a) (g b)
+
+instance Biapplicative Smash where
+  bipure = Smash
+
+  Smash f g <<*>> Smash a b = Smash (f a) (g b)
+  _ <<*>> _ = Nada
 
 instance Bifoldable Smash where
   bifoldMap f g = \case
