@@ -72,7 +72,7 @@ import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
-import Internal
+import Data.Smash.Internal
 
 {- $general
 
