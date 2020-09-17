@@ -1,4 +1,4 @@
-module Internal
+module Data.Smash.Internal
 ( unzipFirst
 , undecideFirst
 ) where

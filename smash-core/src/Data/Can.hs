@@ -69,7 +69,7 @@ module Data.Can
 import Control.Applicative (Alternative(..), liftA2)
 import Control.DeepSeq (NFData(..))
 
-import Data.Bifunctor
+import Data.Biapplicative
 import Data.Bifoldable
 import Data.Binary (Binary(..))
 import Data.Bitraversable
@@ -83,7 +83,7 @@ import Data.Semigroup (Semigroup(..))
 
 import GHC.Generics
 
-import Internal
+import Data.Smash.Internal
 
 {- $general
 
@@ -584,6 +584,18 @@ instance Bifunctor Can where
     One a -> One (f a)
     Eno b -> Eno (g b)
     Two a b -> Two (f a) (g b)
+
+instance Biapplicative Can where
+  bipure = Two
+
+  One f <<*>> One a = One (f a)
+  One f <<*>> Two a _ = One (f a)
+  Eno g <<*>> Eno b = Eno (g b)
+  Eno g <<*>> Two _ b = Eno (g b)
+  Two f _ <<*>> One a = One (f a)
+  Two _ g <<*>> Eno b = Eno (g b)
+  Two f g <<*>> Two a b = Two (f a) (g b)
+  _ <<*>> _ = Non
 
 instance Bifoldable Can where
   bifoldMap f g = \case

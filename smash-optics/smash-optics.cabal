@@ -20,13 +20,10 @@ extra-doc-files:
 
 tested-with:
   GHC ==8.2.2
-   || ==8.4.3
    || ==8.4.4
-   || ==8.6.3
    || ==8.6.5
-   || ==8.8.3
    || ==8.8.4
-   || ==8.10.1
+   || ==8.10.2
 
 source-repository head
   type:     git
