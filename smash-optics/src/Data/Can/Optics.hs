@@ -16,8 +16,10 @@
 -- 'Prism's and 'Traversal's for the 'Can' datatype.
 --
 module Data.Can.Optics
-( -- * Prisms
-  _Non
+( -- * Isos
+  _CanIso
+  -- * Prisms
+, _Non
 , _One
 , _Eno
 , _Two
@@ -37,6 +39,22 @@ import Optics.Iso
 import Optics.IxTraversal
 import Optics.Prism
 import Optics.Traversal
+
+
+-- ------------------------------------------------------------------- --
+-- Isos
+
+-- | A 'Control.Lens.Iso' between a wedge coproduct and pointed coproduct.
+--
+_CanIso :: Iso (Can a b) (Can c d) (Maybe a, Maybe b) (Maybe c, Maybe d)
+_CanIso = iso f g
+  where
+    f t = (canFst t, canSnd t)
+
+    g (Nothing, Nothing) = Non
+    g (Just a, Nothing) = One a
+    g (Nothing, Just b) = Eno b
+    g (Just a, Just b) = Two a b
 
 -- ------------------------------------------------------------------- --
 -- Traversals

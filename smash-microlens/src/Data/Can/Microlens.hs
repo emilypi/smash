@@ -33,6 +33,9 @@ import Lens.Micro
 import Data.Can
 
 
+-- ------------------------------------------------------------------- --
+-- Traversals
+
 -- | A 'Traversal' of the first parameter, suitable for use
 -- with "Control.Lens".
 --

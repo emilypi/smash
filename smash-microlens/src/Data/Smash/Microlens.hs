@@ -29,6 +29,9 @@ import Lens.Micro
 import Data.Smash
 
 
+-- ------------------------------------------------------------------- --
+-- Traversals
+
 -- | A 'Traversal' of the smashed pair, suitable for use
 -- with "Control.Lens".
 --
