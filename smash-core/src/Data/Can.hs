@@ -34,11 +34,17 @@ module Data.Can
 , canWithMerge
 , canEach
 , canEachA
-  -- * Folding
+  -- * Folding and Unfolding
 , foldOnes
 , foldEnos
 , foldTwos
 , gatherCans
+, unfoldr
+, unfoldrM
+, iterateUntil
+, iterateUntilM
+, accumUntil
+, accumUntilM
   -- * Filtering
 , ones
 , enos
@@ -76,6 +82,7 @@ import Data.Bitraversable
 import Data.Data
 import qualified Data.Either as E
 import Data.Foldable
+import Data.Functor.Identity
 import Data.Hashable
 #if __GLASGOW_HASKELL__ < 804
 import Data.Semigroup (Semigroup(..))
@@ -186,7 +193,8 @@ canEach f g = canWithMerge mempty f g mappend
 -- 'Monoid' result in the context of an 'Applicative'.
 --
 canEachA
-    :: (Applicative m, Monoid c)
+    :: Applicative m
+    => Monoid c
     => (a -> m c)
       -- ^ eliminator for the 'One' case
     -> (b -> m c)
@@ -347,6 +355,79 @@ gatherCans (One as) = fmap One as
 gatherCans (Eno bs) = fmap Eno bs
 gatherCans (Two as bs) = zipWith Two as bs
 
+-- | Unfold from right to left into a pointed product. For a variant
+-- that accumulates in the seed instead of just updating with a
+-- new value, see 'accumUntil' and 'accumUntilM'.
+--
+unfoldr :: Alternative f => (b -> Can a b) -> b -> f a
+unfoldr f = runIdentity . unfoldrM (pure . f)
+
+-- | Unfold from right to left into a monadic computation over a pointed product
+--
+unfoldrM :: (Monad m, Alternative f) => (b -> m (Can a b)) -> b -> m (f a)
+unfoldrM f b = f b >>= \case
+    Non -> pure empty
+    One a -> (pure a <|>) <$> unfoldrM f b
+    Eno b' -> unfoldrM f b'
+    Two a b' -> (pure a <|>) <$> unfoldrM f b'
+
+-- | Iterate on a seed, accumulating a result. See 'iterateUntilM' for
+-- more details.
+--
+iterateUntil :: Alternative f => (b -> Can a b) -> b -> f a
+iterateUntil f = runIdentity . iterateUntilM (pure . f)
+
+-- | Iterate on a seed, which may result in one of four scenarios:
+--
+--   1. The function yields a @Non@ value, which terminates the
+--      iteration.
+--
+--   2. The function yields a @One@ value.
+--
+--   3. The function yields a @Eno@ value, which changes the seed
+--      and iteration continues with the new seed.
+--
+--   4. The function yields the @a@ value of a @Two@ case.
+--
+iterateUntilM
+    :: Monad m
+    => Alternative f
+    => (b -> m (Can a b))
+    -> b
+    -> m (f a)
+iterateUntilM f b = f b >>= \case
+    Non -> pure empty
+    One a -> pure (pure a)
+    Eno b' -> iterateUntilM f b'
+    Two a _ -> pure (pure a)
+
+-- | Iterate on a seed, accumulating values and monoidally
+-- updating the seed with each update.
+--
+accumUntil
+    :: Alternative f
+    => Monoid b
+    => (b -> Can a b)
+    -> f a
+accumUntil f = runIdentity (accumUntilM (pure . f))
+
+-- | Iterate on a seed, accumulating values and monoidally
+-- updating a seed within a monad.
+--
+accumUntilM
+    :: Monad m
+    => Alternative f
+    => Monoid b
+    => (b -> m (Can a b))
+    -> m (f a)
+accumUntilM f = go mempty
+  where
+    go b = f b >>= \case
+      Non -> pure empty
+      One a -> (pure a <|>) <$> go b
+      Eno b' -> go (b `mappend` b')
+      Two a b' -> (pure a <|>) <$> go (b `mappend` b')
+
 -- -------------------------------------------------------------------- --
 -- Partitioning
 
@@ -376,11 +457,10 @@ partitionEithers = go . E.partitionEithers . toList
 -- their parts.
 --
 partitionCans
-    :: forall f t a b
-    . ( Foldable t
-      , Alternative f
-      )
-    => t (Can a b) -> (f a, f b)
+    :: Foldable t
+    => Alternative f
+    => t (Can a b)
+    -> (f a, f b)
 partitionCans = foldr go (empty, empty)
   where
     go Non acc = acc
@@ -392,10 +472,8 @@ partitionCans = foldr go (empty, empty)
 -- and folding over '(<|>)'.
 --
 mapCans
-    :: forall f t a b c
-    . ( Alternative f
-      , Traversable t
-      )
+    :: Traversable t
+    => Alternative f
     => (a -> Can b c)
     -> t a
     -> (f b, f c)
