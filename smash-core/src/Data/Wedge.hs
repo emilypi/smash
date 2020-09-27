@@ -99,9 +99,9 @@ Nowhere +-------+
 The fact that we can think about 'Wedge' as a coproduct gives us
 some reasoning power about how a 'Wedge' will interact with the
 product in Hask*, called 'Can'. Namely, we know that a product of a type and a
-coproduct, `a * (b + c)`, is equivalent to `(a + b) * (a + c)`. Additioally,
+coproduct, `a * (b + c)`, is equivalent to `(a * b) + (a * c)`. Additionally,
 we may derive other facts about its associativity, distributivity, commutativity, and
-any more. As an exercise, think of soemthing `Either` can do. Now do it with 'Wedge'!
+any more. As an exercise, think of something `Either` can do. Now do it with 'Wedge'!
 
 -}
 
