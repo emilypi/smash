@@ -81,7 +81,7 @@ in the category Hask* of pointed Hask types, called a <https://ncatlab.org/nlab/
 The category Hask* consists of Hask types affixed with
 a dedicated base point along with an object. In Hask, this is
 equivalent to `1 + a`, also known as 'Maybe a'. Because we can conflate
-basepoints of different types (there is only one @Nothing@ type), the wedge sum is
+basepoints of different types (there is only one @Nothing@ type), the wedge sum
 can be viewed as the type `1 + a + b`, or `Maybe (Either a b)` in Hask.
 Pictorially, one can visualize this as:
 
@@ -101,7 +101,7 @@ some reasoning power about how a 'Wedge' will interact with the
 product in Hask*, called 'Can'. Namely, we know that a product of a type and a
 coproduct, `a * (b + c)`, is equivalent to `(a * b) + (a * c)`. Additionally,
 we may derive other facts about its associativity, distributivity, commutativity, and
-any more. As an exercise, think of something `Either` can do. Now do it with 'Wedge'!
+many more. As an exercise, think of something `Either` can do. Now do it with 'Wedge'!
 
 -}
 
@@ -151,7 +151,7 @@ fromWedge Nowhere = Nothing
 fromWedge (Here a) = Just (Left a)
 fromWedge (There b) = Just (Right b)
 
--- | Convert a 'Maybe (Either a b)' value into a 'Wedge'
+-- | Convert a 'Maybe (Either a b)' value into a 'Wedge'.
 --
 toWedge :: Maybe (Either a b) -> Wedge a b
 toWedge Nothing = Nowhere
@@ -333,7 +333,7 @@ reassocRL = \case
 distributeWedge :: Wedge (a,b) c -> (Wedge a c, Wedge b c)
 distributeWedge = unzipFirst
 
--- | Codistribute 'Wedge's over a coproduct
+-- | Codistribute 'Wedge's over a coproduct.
 --
 codistributeWedge :: Either (Wedge a c) (Wedge b c) -> Wedge (Either a b) c
 codistributeWedge = undecideFirst
