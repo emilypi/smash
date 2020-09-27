@@ -342,7 +342,7 @@ accumUntilM f = go mempty
     go b = f b >>= \case
       Nowhere -> pure empty
       Here a -> (pure a <|>) <$> go b
-      There b' -> go (b `mappend` b')
+      There b' -> go (b' `mappend` b)
 
 -- -------------------------------------------------------------------- --
 -- Partitioning

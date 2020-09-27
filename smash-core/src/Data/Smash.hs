@@ -311,7 +311,7 @@ accumUntilM f = go mempty
   where
     go b = f b >>= \case
       Nada -> pure empty
-      Smash a b' -> (pure a <|>) <$> go (b `mappend` b')
+      Smash a b' -> (pure a <|>) <$> go (b' `mappend` b)
 
 -- -------------------------------------------------------------------- --
 -- Partitioning

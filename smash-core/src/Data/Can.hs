@@ -425,8 +425,8 @@ accumUntilM f = go mempty
     go b = f b >>= \case
       Non -> pure empty
       One a -> (pure a <|>) <$> go b
-      Eno b' -> go (b `mappend` b')
-      Two a b' -> (pure a <|>) <$> go (b `mappend` b')
+      Eno b' -> go (b' `mappend` b)
+      Two a b' -> (pure a <|>) <$> go (b' `mappend` b)
 
 -- -------------------------------------------------------------------- --
 -- Partitioning
