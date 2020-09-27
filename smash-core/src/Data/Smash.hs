@@ -168,14 +168,14 @@ hulkSmash a b = \case
   There d -> Smash a d
 
 -- | Project the left value of a 'Smash' datatype. This is analogous
--- to 'fst' for @'(,)'@.
+-- to 'fst' for @(',')@.
 --
 smashFst :: Smash a b -> Maybe a
 smashFst Nada = Nothing
 smashFst (Smash a _) = Just a
 
 -- | Project the right value of a 'Smash' datatype. This is analogous
--- to 'snd' for @'(,)'@.
+-- to 'snd' for @(',')@.
 --
 smashSnd :: Smash a b -> Maybe b
 smashSnd Nada = Nothing
@@ -264,7 +264,7 @@ partitionSmashes = foldr go (empty, empty)
     go (Smash a b) (as, bs) = (pure a <|> as, pure b <|> bs)
 
 -- | Partition a structure by mapping its contents into 'Smash's,
--- and folding over @'(<|>)'@.
+-- and folding over @('<|>')@.
 --
 mapSmashes
     :: forall f t a b c
@@ -280,14 +280,14 @@ mapSmashes f = partitionSmashes . fmap f
 -- Currying & Uncurrying
 
 -- | "Curry" a map from a smash product to a pointed type. This is analogous
--- to 'curry' for @'(->)'@.
+-- to 'curry' for @('->')@.
 --
 smashCurry :: (Smash a b -> Maybe c) -> Maybe a -> Maybe b -> Maybe c
 smashCurry f (Just a) (Just b) = f (Smash a b)
 smashCurry _ _ _ = Nothing
 
 -- | "Uncurry" a map of pointed types to a map of a smash product to a pointed type.
--- This is analogous to 'uncurry' for @'(->)'@.
+-- This is analogous to 'uncurry' for @('->')@.
 --
 smashUncurry :: (Maybe a -> Maybe b -> Maybe c) -> Smash a b -> Maybe c
 smashUncurry _ Nada = Nothing

@@ -288,7 +288,7 @@ partitionWedges = foldr go (empty, empty)
     go (There b) (as, bs) = (as, pure b <|> bs)
 
 -- | Partition a structure by mapping its contents into 'Wedge's,
--- and folding over @'(<|>)'@.
+-- and folding over @('<|>')@.
 --
 mapWedges
     :: forall f t a b c
