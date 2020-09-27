@@ -16,7 +16,7 @@
 -- Portability  : CPP, RankNTypes, TypeApplications
 --
 -- This module contains the definition for the 'Wedge' datatype. In
--- practice, this type is isomorphic to 'Maybe (Either a b)' - the type with
+-- practice, this type is isomorphic to @'Maybe' ('Either' a b)@ - the type with
 -- two possibly non-exclusive values and an empty case.
 module Data.Wedge
 ( -- * Datatypes
@@ -80,35 +80,35 @@ Categorically, the 'Wedge' datatype represents the coproduct (like, 'Either')
 in the category Hask* of pointed Hask types, called a <https://ncatlab.org/nlab/show/wedge+sum wedge sum>.
 The category Hask* consists of Hask types affixed with
 a dedicated base point along with an object. In Hask, this is
-equivalent to `1 + a`, also known as 'Maybe a'. Because we can conflate
+equivalent to @1 + a@, also known as @'Maybe' a@. Because we can conflate
 basepoints of different types (there is only one @Nothing@ type), the wedge sum is
-can be viewed as the type `1 + a + b`, or `Maybe (Either a b)` in Hask.
+can be viewed as the type @1 + a + b@, or @'Maybe' ('Either' a b)@ in Hask.
 Pictorially, one can visualize this as:
 
 
 @
 'Wedge':
-                a
-                |
-Nowhere +-------+
-                |
-                b
+                  a
+                  |
+'Nowhere' +-------+
+                  |
+                  b
 @
 
 
 The fact that we can think about 'Wedge' as a coproduct gives us
 some reasoning power about how a 'Wedge' will interact with the
 product in Hask*, called 'Can'. Namely, we know that a product of a type and a
-coproduct, `a * (b + c)`, is equivalent to `(a * b) + (a * c)`. Additionally,
+coproduct, @a * (b + c)@, is equivalent to @(a * b) + (a * c)@. Additionally,
 we may derive other facts about its associativity, distributivity, commutativity, and
-any more. As an exercise, think of something `Either` can do. Now do it with 'Wedge'!
+any more. As an exercise, think of something 'Either' can do. Now do it with 'Wedge'!
 
 -}
 
 -- | The 'Wedge' data type represents values with two exclusive
 -- possibilities, and an empty case. This is a coproduct of pointed
 -- types - i.e. of 'Maybe' values. The result is a type, 'Wedge a b',
--- which is isomorphic to 'Maybe (Either a b)'.
+-- which is isomorphic to @'Maybe' ('Either' a b)@.
 --
 data Wedge a b = Nowhere | Here a | There b
   deriving
@@ -138,20 +138,20 @@ wedge _ _ g (There b) = g b
 -- | Given two possible pointed types, produce a 'Wedge' by
 -- considering the left case, the right case, and mapping their
 -- 'Nothing' cases to 'Nowhere'. This is a pushout of pointed
--- types `A <- * -> B`.
+-- types @A <- * -> B@.
 --
 quotWedge :: Either (Maybe a) (Maybe b) -> Wedge a b
 quotWedge (Left a) = maybe Nowhere Here a
 quotWedge (Right b) = maybe Nowhere There b
 
--- | Convert a 'Wedge a b' into a 'Maybe (Either a b)' value.
+-- | Convert a 'Wedge a b' into a @'Maybe' ('Either' a b)@ value.
 --
 fromWedge :: Wedge a b -> Maybe (Either a b)
 fromWedge Nowhere = Nothing
 fromWedge (Here a) = Just (Left a)
 fromWedge (There b) = Just (Right b)
 
--- | Convert a 'Maybe (Either a b)' value into a 'Wedge'
+-- | Convert a @'Maybe' ('Either' a b)@ value into a 'Wedge'
 --
 toWedge :: Maybe (Either a b) -> Wedge a b
 toWedge Nothing = Nowhere
@@ -288,7 +288,7 @@ partitionWedges = foldr go (empty, empty)
     go (There b) (as, bs) = (as, pure b <|> bs)
 
 -- | Partition a structure by mapping its contents into 'Wedge's,
--- and folding over '(<|>)'.
+-- and folding over @'(<|>)'@.
 --
 mapWedges
     :: forall f t a b c

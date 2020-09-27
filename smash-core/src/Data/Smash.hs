@@ -16,7 +16,7 @@
 -- Portability  : CPP, RankNTypes, TypeApplications
 --
 -- This module contains the definition for the 'Smash' datatype. In
--- practice, this type is isomorphic to 'Maybe (a,b)' - the type with
+-- practice, this type is isomorphic to @'Maybe' (a,b)@ - the type with
 -- two possibly non-exclusive values and an empty case.
 module Data.Smash
 ( -- * Datatypes
@@ -85,7 +85,7 @@ import Data.Smash.Internal
 Categorically, the 'Smash' datatype represents a special type of product, a
 <https://ncatlab.org/nlab/show/smash+product smash product>, in the category Hask*
 of pointed Hask types. The category Hask* consists of Hask types affixed with
-a dedicated base point - i.e. all objects look like 'Maybe a'. The smash product is a symmetric, monoidal tensor in Hask* that plays
+a dedicated base point - i.e. all objects look like @'Maybe' a@. The smash product is a symmetric, monoidal tensor in Hask* that plays
 nicely with the product, 'Can', and coproduct, 'Wedge'. Pictorially,
 these datatypes look like this:
 
@@ -124,7 +124,7 @@ that makes sense to use, and that will be useful to us as Haskell developers.
 
 -- | The 'Smash' data type represents A value which has either an
 -- empty case, or two values. The result is a type, 'Smash a b', which is
--- isomorphic to 'Maybe (a,b)'.
+-- isomorphic to @'Maybe' (a,b)@.
 --
 -- Categorically, the smash product (the quotient of a pointed product by
 -- a wedge sum) has interesting properties. It forms a closed
@@ -168,14 +168,14 @@ hulkSmash a b = \case
   There d -> Smash a d
 
 -- | Project the left value of a 'Smash' datatype. This is analogous
--- to 'fst' for '(,)'.
+-- to 'fst' for @'(,)'@.
 --
 smashFst :: Smash a b -> Maybe a
 smashFst Nada = Nothing
 smashFst (Smash a _) = Just a
 
 -- | Project the right value of a 'Smash' datatype. This is analogous
--- to 'snd' for '(,)'.
+-- to 'snd' for @'(,)'@.
 --
 smashSnd :: Smash a b -> Maybe b
 smashSnd Nada = Nothing
@@ -225,7 +225,7 @@ filterNadas = foldr go []
 -- Folding
 
 -- | Fold over the 'Smash' case of a 'Foldable' of 'Smash' products by
--- some accumulatig function.
+-- some accumulating function.
 --
 foldSmashes
     :: Foldable f
@@ -264,7 +264,7 @@ partitionSmashes = foldr go (empty, empty)
     go (Smash a b) (as, bs) = (pure a <|> as, pure b <|> bs)
 
 -- | Partition a structure by mapping its contents into 'Smash's,
--- and folding over '(<|>)'.
+-- and folding over @'(<|>)'@.
 --
 mapSmashes
     :: forall f t a b c
@@ -280,14 +280,14 @@ mapSmashes f = partitionSmashes . fmap f
 -- Currying & Uncurrying
 
 -- | "Curry" a map from a smash product to a pointed type. This is analogous
--- to 'curry' for '(->)'.
+-- to 'curry' for @'(->)'@.
 --
 smashCurry :: (Smash a b -> Maybe c) -> Maybe a -> Maybe b -> Maybe c
 smashCurry f (Just a) (Just b) = f (Smash a b)
 smashCurry _ _ _ = Nothing
 
 -- | "Uncurry" a map of pointed types to a map of a smash product to a pointed type.
--- This is analogous to 'uncurry' for '(->)'.
+-- This is analogous to 'uncurry' for @'(->)'@.
 --
 smashUncurry :: (Maybe a -> Maybe b -> Maybe c) -> Smash a b -> Maybe c
 smashUncurry _ Nada = Nothing
@@ -361,7 +361,7 @@ reassocRL _ = Nada
 -- -------------------------------------------------------------------- --
 -- Symmetry
 
--- | Swap the positions of values in a 'Smash a b' to form a 'Smash b a'.
+-- | Swap the positions of values in a @'Smash' a b@ to form a @'Smash' b a@.
 --
 swapSmash :: Smash a b -> Smash b a
 swapSmash Nada = Nada
