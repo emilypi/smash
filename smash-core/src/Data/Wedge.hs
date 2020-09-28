@@ -39,10 +39,16 @@ module Data.Wedge
 , filterHeres
 , filterTheres
 , filterNowheres
-  -- ** Folding
+  -- ** Folding and Unfolding
 , foldHeres
 , foldTheres
 , gatherWedges
+, unfoldr
+, unfoldrM
+, iterateUntil
+, iterateUntilM
+, accumUntil
+, accumUntilM
   -- ** Partitioning
 , partitionWedges
 , mapWedges
@@ -65,6 +71,7 @@ import Data.Bifoldable
 import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Data
+import Data.Functor.Identity
 import Data.Hashable
 #if __GLASGOW_HASKELL__ < 804
 import Data.Semigroup (Semigroup(..))
@@ -269,6 +276,74 @@ gatherWedges Nowhere = []
 gatherWedges (Here as) = fmap Here as
 gatherWedges (There bs) = fmap There bs
 
+-- | Unfold from right to left into a wedge product. For a variant
+-- that accumulates in the seed instead of just updating with a
+-- new value, see 'accumUntil' and 'accumUntilM'.
+--
+unfoldr :: Alternative f => (b -> Wedge a b) -> b -> f a
+unfoldr f = runIdentity . unfoldrM (pure . f)
+
+-- | Unfold from right to left into a monadic computation over a wedge product
+--
+unfoldrM :: (Monad m, Alternative f) => (b -> m (Wedge a b)) -> b -> m (f a)
+unfoldrM f b = f b >>= \case
+    Nowhere -> pure empty
+    Here a -> (pure a <|>) <$> unfoldrM f b
+    There b' -> unfoldrM f b'
+
+-- | Iterate on a seed, accumulating a result. See 'iterateUntilM' for
+-- more details.
+--
+iterateUntil :: Alternative f => (b -> Wedge a b) -> b -> f a
+iterateUntil f = runIdentity . iterateUntilM (pure . f)
+
+-- | Iterate on a seed, which may result in one of three scenarios:
+--
+--   1. The function yields a @Nowhere@ value, which terminates the
+--      iteration.
+--
+--   2. The function yields a @Here@ value.
+--
+--   3. The function yields a @There@ value, which changes the seed
+--      and iteration continues with the new seed.
+--
+iterateUntilM
+    :: Monad m
+    => Alternative f
+    => (b -> m (Wedge a b))
+    -> b
+    -> m (f a)
+iterateUntilM f b = f b >>= \case
+    Nowhere -> pure empty
+    Here a -> pure (pure a)
+    There b' -> iterateUntilM f b'
+
+-- | Iterate on a seed, accumulating values and monoidally
+-- updating the seed with each update.
+--
+accumUntil
+    :: Alternative f
+    => Monoid b
+    => (b -> Wedge a b)
+    -> f a
+accumUntil f = runIdentity (accumUntilM (pure . f))
+
+-- | Iterate on a seed, accumulating values and monoidally
+-- updating a seed within a monad.
+--
+accumUntilM
+    :: Monad m
+    => Alternative f
+    => Monoid b
+    => (b -> m (Wedge a b))
+    -> m (f a)
+accumUntilM f = go mempty
+  where
+    go b = f b >>= \case
+      Nowhere -> pure empty
+      Here a -> (pure a <|>) <$> go b
+      There b' -> go (b' `mappend` b)
+
 -- -------------------------------------------------------------------- --
 -- Partitioning
 
@@ -276,10 +351,8 @@ gatherWedges (There bs) = fmap There bs
 -- their parts.
 --
 partitionWedges
-    :: forall f t a b
-    . ( Foldable t
-      , Alternative f
-      )
+    :: Foldable t
+    => Alternative f
     => t (Wedge a b) -> (f a, f b)
 partitionWedges = foldr go (empty, empty)
   where
@@ -291,10 +364,8 @@ partitionWedges = foldr go (empty, empty)
 -- and folding over '(<|>)'.
 --
 mapWedges
-    :: forall f t a b c
-    . ( Alternative f
-      , Traversable t
-      )
+    :: Traversable t
+    => Alternative f
     => (a -> Wedge b c)
     -> t a
     -> (f b, f c)
