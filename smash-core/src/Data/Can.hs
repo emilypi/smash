@@ -117,7 +117,7 @@ some reasoning power about how this thing will be able to interact with the
 coproduct in Hask*, called 'Wedge'. Namely, facts about currying
 @Can a b -> c ~ a -> b -> c@ and distributivity over 'Wedge'
 along with other facts about its associativity, commutativity, and
-any other analogy with '(,)' that you can think of.
+any other analogy with @(',')@ that you can think of.
 -}
 
 
@@ -211,7 +211,7 @@ canEachA f g = canWithMerge (pure mempty) f g (liftA2 mappend)
 -- Combinators
 
 -- | Project the left value of a 'Can' datatype. This is analogous
--- to 'fst' for '(,)'.
+-- to 'fst' for @(',')@.
 --
 canFst :: Can a b -> Maybe a
 canFst = \case
@@ -220,7 +220,7 @@ canFst = \case
   _ -> Nothing
 
 -- | Project the right value of a 'Can' datatype. This is analogous
--- to 'snd' for '(,)'.
+-- to 'snd' for @(',')@.
 --
 canSnd :: Can a b -> Maybe b
 canSnd = \case
@@ -469,7 +469,7 @@ partitionCans = foldr go (empty, empty)
     go (Two a b) (as, bs) = (pure a <|> as, pure b <|> bs)
 
 -- | Partition a structure by mapping its contents into 'Can's,
--- and folding over '(<|>)'.
+-- and folding over @('<|>')@.
 --
 mapCans
     :: Traversable t
@@ -546,7 +546,7 @@ swapCan = \case
 
 -- | Curry a function from a 'Can' to a 'Maybe' value, resulting in a
 -- function of curried 'Maybe' values. This is analogous to currying
--- for '(->)'.
+-- for @('->')@.
 --
 canCurry :: (Can a b -> Maybe c) -> Maybe a -> Maybe b -> Maybe c
 canCurry k ma mb = case (ma, mb) of
@@ -557,7 +557,7 @@ canCurry k ma mb = case (ma, mb) of
 
 -- | "Uncurry" a function from a 'Can' to a 'Maybe' value, resulting in a
 -- function of curried 'Maybe' values. This is analogous to uncurrying
--- for '(->)'.
+-- for @('->')@.
 --
 canUncurry :: (Maybe a -> Maybe b -> Maybe c) -> Can a b -> Maybe c
 canUncurry k = \case
