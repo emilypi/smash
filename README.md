@@ -1,4 +1,5 @@
-# Smash: smash products, wedge sums, and pointed products for Haskell
+# Smash
+---
 
 ## Background
 
