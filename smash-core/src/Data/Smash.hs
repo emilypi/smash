@@ -36,9 +36,15 @@ module Data.Smash
   -- * Filtering
 , smashes
 , filterNadas
-  -- * Folding
+  -- * Folding and Unfolding
 , foldSmashes
 , gatherSmashes
+, unfoldr
+, unfoldrM
+, iterateUntil
+, iterateUntilM
+, accumUntil
+, accumUntilM
   -- * Partitioning
 , partitionSmashes
 , mapSmashes
@@ -69,6 +75,7 @@ import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Can (Can(..), can)
 import Data.Data
+import Data.Functor.Identity
 import Data.Hashable
 import Data.Wedge (Wedge(..))
 #if __GLASGOW_HASKELL__ < 804
@@ -246,6 +253,66 @@ gatherSmashes :: Smash [a] [b] -> [Smash a b]
 gatherSmashes (Smash as bs) = zipWith Smash as bs
 gatherSmashes _ = []
 
+-- | Unfold from right to left into a smash product
+--
+unfoldr :: Alternative f => (b -> Smash a b) -> b -> f a
+unfoldr f = runIdentity . unfoldrM (pure . f)
+
+-- | Unfold from right to left into a monadic computation over a smash product
+--
+unfoldrM :: (Monad m, Alternative f) => (b -> m (Smash a b)) -> b -> m (f a)
+unfoldrM f b = f b >>= \case
+    Nada -> pure empty
+    Smash a b' -> (pure a <|>) <$> unfoldrM f b'
+
+-- | Iterate on a seed, accumulating a result. See 'iterateUntilM' for
+-- more details.
+--
+iterateUntil :: Alternative f => (b -> Smash a b) -> b -> f a
+iterateUntil f = runIdentity . iterateUntilM (pure . f)
+
+-- | Iterate on a seed, which may result in one of two scenarios:
+--
+--   1. The function yields a @Nada@ value, which terminates the
+--      iteration.
+--
+--   2. The function yields a @Smash@ value.
+--
+iterateUntilM
+    :: Monad m
+    => Alternative f
+    => (b -> m (Smash a b))
+    -> b
+    -> m (f a)
+iterateUntilM f b = f b >>= \case
+    Nada -> pure empty
+    Smash a _ -> pure (pure a)
+
+-- | Iterate on a seed, accumulating values and monoidally
+-- updating the seed with each update.
+--
+accumUntil
+    :: Alternative f
+    => Monoid b
+    => (b -> Smash a b)
+    -> f a
+accumUntil f = runIdentity (accumUntilM (pure . f))
+
+-- | Iterate on a seed, accumulating values and monoidally
+-- updating a seed within a monad.
+--
+accumUntilM
+    :: Monad m
+    => Alternative f
+    => Monoid b
+    => (b -> m (Smash a b))
+    -> m (f a)
+accumUntilM f = go mempty
+  where
+    go b = f b >>= \case
+      Nada -> pure empty
+      Smash a b' -> (pure a <|>) <$> go (b' `mappend` b)
+
 -- -------------------------------------------------------------------- --
 -- Partitioning
 
@@ -253,10 +320,8 @@ gatherSmashes _ = []
 -- their parts.
 --
 partitionSmashes
-    :: forall f t a b
-    . ( Foldable t
-      , Alternative f
-      )
+    :: Foldable t
+    => Alternative f
     => t (Smash a b) -> (f a, f b)
 partitionSmashes = foldr go (empty, empty)
   where
@@ -267,10 +332,8 @@ partitionSmashes = foldr go (empty, empty)
 -- and folding over @('<|>')@.
 --
 mapSmashes
-    :: forall f t a b c
-    . ( Alternative f
-      , Traversable t
-      )
+    :: Alternative f
+    => Traversable t
     => (a -> Smash b c)
     -> t a
     -> (f b, f c)
