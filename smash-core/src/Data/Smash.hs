@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveLift #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
@@ -84,6 +85,7 @@ import Data.Semigroup (Semigroup(..))
 
 
 import GHC.Generics
+import qualified Language.Haskell.TH.Syntax as TH
 
 import Data.Smash.Internal
 
@@ -143,6 +145,7 @@ data Smash a b = Nada | Smash a b
     ( Eq, Ord, Read, Show
     , Generic, Generic1
     , Typeable, Data
+    , TH.Lift
     )
 
 -- -------------------------------------------------------------------- --

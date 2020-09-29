@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveLift #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
@@ -89,6 +90,7 @@ import Data.Semigroup (Semigroup(..))
 #endif
 
 import GHC.Generics
+import qualified Language.Haskell.TH.Syntax as TH
 
 import Data.Smash.Internal
 
@@ -131,6 +133,7 @@ data Can a b = Non | One a | Eno b | Two a b
     ( Eq, Ord, Read, Show
     , Generic, Generic1
     , Typeable, Data
+    , TH.Lift
     )
 
 -- -------------------------------------------------------------------- --
