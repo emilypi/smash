@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveLift #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
@@ -78,6 +79,7 @@ import Data.Semigroup (Semigroup(..))
 #endif
 
 import GHC.Generics
+import qualified Language.Haskell.TH.Syntax as TH
 
 import Data.Smash.Internal
 
@@ -123,6 +125,7 @@ data Wedge a b = Nowhere | Here a | There b
     ( Eq, Ord, Read, Show
     , Generic, Generic1
     , Typeable, Data
+    , TH.Lift
     )
 
 -- -------------------------------------------------------------------- --
