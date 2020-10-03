@@ -5,7 +5,7 @@
 
 This package consists of 3 interesting datatypes and their respective monad transformers:
 
- - [Wedge](https://hackage.haskell.org/package/smash/docs/Data-Wedge.html): Isomorphic to `Maybe (Either a b)`. The `Wedge` datatype represents the coproduct in the category Hask\* of pointed Hask types, called a [wedge sum](https://ncatlab.org/nlab/show/wedge+sum). One can derive thistype as follows:
+ - [Wedge](https://hackage.haskell.org/package/smash/docs/Data-Wedge.html): Isomorphic to `Maybe (Either a b)`. The `Wedge` datatype represents the coproduct in the category Hask\* of pointed Hask types, called a [wedge sum](https://ncatlab.org/nlab/show/wedge+sum). One can derive this type as follows:
 
     ```haskell
     Either (Maybe a) (Maybe b)
