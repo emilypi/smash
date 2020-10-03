@@ -31,7 +31,7 @@ This package consists of 3 interesting datatypes and their respective monad tran
     ```
 
  - [Smash](https://hackage.haskell.org/package/smash/docs/Data-Smash.html): Isomorphic to `Maybe (a,b)`. The `Smash` datatype represents a special type of product, a
-[smash product](https://ncatlab.org/nlab/show/smash+product), in the category Hask\*.  The smash product is a symmetric, monoidal tensor in Hask* that is the quotient of `Can` over `Wedge`. It can be derive as follows:
+[smash product](https://ncatlab.org/nlab/show/smash+product), in the category Hask\*.  The smash product is a symmetric, monoidal tensor in Hask* that is the quotient of `Can` over `Wedge`. It can be derived as follows:
 
     ```haskell
     Can a b / Wedge a b
