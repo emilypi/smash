@@ -36,7 +36,9 @@ This package consists of 3 interesting datatypes and their respective monad tran
     ```haskell
     Can a b / Wedge a b
     ~ 1 + a + b + a*b / 1 + a + b
-    -- def. of quotient
+    -- reassoc coproduct
+    ~ (1 + a + b) + a*b / 1 + a + b
+    -- def. of quotient: (1 + a + b) ~ 1
     ~ 1 + a * b
     ~ Maybe (a,b)
     ~ Smash a b
