@@ -11,7 +11,7 @@ license:         BSD3
 license-file:    LICENSE
 author:          Emily Pillmore
 maintainer:      emilypi@cohomolo.gy
-copyright:       (c) 2020 Emily Pillmore <emilypi@cohomolo.gy>
+copyright:       (c) 2020-2021 Emily Pillmore <emilypi@cohomolo.gy>
 category:        Data
 build-type:      Simple
 extra-doc-files:
@@ -23,7 +23,8 @@ tested-with:
    || ==8.4.4
    || ==8.6.5
    || ==8.8.4
-   || ==8.10.2
+   || ==8.10.4
+   || ==9.0.1
 
 source-repository head
   type:     git
@@ -36,7 +37,7 @@ library
     Data.Wedge.Optics
 
   build-depends:
-      base         >=4.10 && <5.0
+      base         >=4.10 && <4.16
     , optics-core  ^>=0.3
     , smash        ^>=0.1
 

@@ -21,7 +21,8 @@ tested-with:
    || ==8.4.4
    || ==8.6.5
    || ==8.8.4
-   || ==8.10.2
+   || ==8.10.4
+   || ==9.0.1
 
 library
   exposed-modules:
@@ -31,7 +32,7 @@ library
 
   build-depends:
       aeson                 >=1.4   && <1.6
-    , base                  >=4.10  && <5.0
+    , base                  >=4.10  && <4.16
     , smash                 ^>=0.1.1
     , unordered-containers
 
