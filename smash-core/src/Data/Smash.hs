@@ -154,14 +154,12 @@ data Smash a b = Nada | Smash a b
 -- | Convert a 'Maybe' value into a 'Smash' value
 --
 toSmash :: Maybe (a,b) -> Smash a b
-toSmash Nothing = Nada
-toSmash (Just (a,b)) = Smash a b
+toSmash = maybe Nada (uncurry Smash)
 
 -- | Convert a 'Smash' value into a 'Maybe' value
 --
 fromSmash :: Smash a b -> Maybe (a,b)
-fromSmash Nada = Nothing
-fromSmash (Smash a b) = Just (a,b)
+fromSmash = smash Nothing (curry Just)
 
 -- | Smash product of pointed type modulo its wedge
 --
@@ -430,8 +428,7 @@ reassocRL _ = Nada
 -- | Swap the positions of values in a @'Smash' a b@ to form a @'Smash' b a@.
 --
 swapSmash :: Smash a b -> Smash b a
-swapSmash Nada = Nada
-swapSmash (Smash a b) = Smash b a
+swapSmash = smash Nada (flip Smash)
 
 -- -------------------------------------------------------------------- --
 -- Std instances
