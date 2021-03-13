@@ -538,11 +538,7 @@ reassocRL = \case
 -- | Swap the positions of values in a 'Can'.
 --
 swapCan :: Can a b -> Can b a
-swapCan = \case
-    Non -> Non
-    One a -> Eno a
-    Eno b -> One b
-    Two a b -> Two b a
+swapCan = can Non Eno One (flip Two)
 
 -- -------------------------------------------------------------------- --
 -- Curry & Uncurry

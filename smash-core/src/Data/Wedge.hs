@@ -152,21 +152,17 @@ wedge _ _ g (There b) = g b
 -- types @A <- * -> B@.
 --
 quotWedge :: Either (Maybe a) (Maybe b) -> Wedge a b
-quotWedge (Left a) = maybe Nowhere Here a
-quotWedge (Right b) = maybe Nowhere There b
+quotWedge = either (maybe Nowhere Here) (maybe Nowhere There)
 
 -- | Convert a 'Wedge a b' into a @'Maybe' ('Either' a b)@ value.
 --
 fromWedge :: Wedge a b -> Maybe (Either a b)
-fromWedge Nowhere = Nothing
-fromWedge (Here a) = Just (Left a)
-fromWedge (There b) = Just (Right b)
+fromWedge = wedge Nothing (Just . Left) (Just . Right)
 
 -- | Convert a @'Maybe' ('Either' a b)@ value into a 'Wedge'
 --
 toWedge :: Maybe (Either a b) -> Wedge a b
-toWedge Nothing = Nowhere
-toWedge (Just e) = either Here There e
+toWedge = maybe Nowhere (either Here There)
 
 -- | Inject a 'Maybe' value into the 'Here' case of a 'Wedge',
 -- or 'Nowhere' if the empty case is given. This is analogous to the
@@ -419,10 +415,7 @@ codistributeWedge = undecideFirst
 -- | Swap the positions of the @a@'s and the @b@'s in a 'Wedge'.
 --
 swapWedge :: Wedge a b -> Wedge b a
-swapWedge = \case
-  Nowhere -> Nowhere
-  Here a -> There a
-  There b -> Here b
+swapWedge = wedge Nowhere There Here
 
 -- -------------------------------------------------------------------- --
 -- Std instances
