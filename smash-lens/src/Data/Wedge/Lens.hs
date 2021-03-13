@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -112,13 +113,15 @@ _There :: Prism (Wedge a b) (Wedge a d) b d
 _There = prism There $ \case
   There b -> Right b
   Here a -> Left (Here a)
-  Nowhere -> Left (Nowhere)
+  Nowhere -> Left Nowhere
 
 -- ------------------------------------------------------------------- --
 -- Orphans
 
+#if ! MIN_VERSION_lens(5,0,0)
 instance Swapped Wedge where
   swapped = iso swapWedge swapWedge
+#endif
 
 instance (a ~ a', b ~ b') => Each (Wedge a a') (Wedge b b') a b where
   each _ Nowhere = pure Nowhere

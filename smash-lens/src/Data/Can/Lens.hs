@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -144,8 +145,10 @@ _Two = prism (uncurry Two) $ \case
 -- ------------------------------------------------------------------- --
 -- Orphans
 
+#if ! MIN_VERSION_lens(5,0,0)
 instance Swapped Can where
   swapped = iso swapCan swapCan
+#endif
 
 instance (a ~ a', b ~ b') => Each (Can a a') (Can b b') a b where
   each _ Non = pure Non
