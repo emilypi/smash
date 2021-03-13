@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeApplications #-}
 -- |
 -- Module       : Data.Smash
--- Copyright    : (c) 2020 Emily Pillmore
+-- Copyright    : (c) 2020-2021 Emily Pillmore
 -- License      : BSD-3-Clause
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
