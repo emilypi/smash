@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -100,8 +101,10 @@ _Smash = prism (uncurry Smash) $ \case
 -- ------------------------------------------------------------------- --
 -- Orphans
 
+#if ! MIN_VERSION_lens(5,0,0)
 instance Swapped Smash where
   swapped = iso swapSmash swapSmash
+#endif
 
 instance (a ~ a', b ~ b') => Each (Smash a a') (Smash b b') a b where
   each _ Nada = pure Nada
