@@ -20,7 +20,7 @@
 --
 module Control.Monad.Trans.Wedge
 ( -- * Monad transformer
-  WedgeT(..)
+  WedgeT(runWedgeT)
   -- ** Combinators
 , mapWedgeT
 ) where

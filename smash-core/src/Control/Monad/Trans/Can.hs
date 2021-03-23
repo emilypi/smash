@@ -20,7 +20,7 @@
 --
 module Control.Monad.Trans.Can
 ( -- * Monad Transformer
-  CanT(..)
+  CanT(runCanT)
   -- ** Combinators
 , mapCanT
 ) where

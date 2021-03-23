@@ -20,7 +20,7 @@
 --
 module Control.Monad.Trans.Smash
 ( -- * Monad transformer
-  SmashT(..)
+  SmashT(runSmashT)
   -- ** Combinators
 , mapSmashT
 ) where
