@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -7,6 +6,9 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Can
 -- Copyright    : (c) 2020-2021 Emily Pillmore
@@ -19,10 +21,13 @@
 -- This module contains the definition for the 'Can' datatype. In
 -- practice, this type is isomorphic to 'Maybe' 'These' - the type with
 -- two possibly non-exclusive values and an empty case.
+--
 module Data.Can
 ( -- * Datatypes
   -- $general
   Can(..)
+  -- ** Type synonyms
+, type (⊗)
   -- * Combinators
 , canFst
 , canSnd
@@ -74,7 +79,9 @@ module Data.Can
 
 
 import Control.Applicative (Alternative(..), liftA2)
-import Control.DeepSeq (NFData(..))
+import Control.DeepSeq
+import Control.Monad.Zip
+import Control.Monad
 
 import Data.Biapplicative
 import Data.Bifoldable
@@ -82,17 +89,23 @@ import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Data
 import qualified Data.Either as E
+import Data.Functor.Classes
 import Data.Foldable
 import Data.Functor.Identity
 import Data.Hashable
-#if __GLASGOW_HASKELL__ < 804
-import Data.Semigroup (Semigroup(..))
-#endif
+import Data.Hashable.Lifted
 
 import GHC.Generics
+import GHC.Read
+
 import qualified Language.Haskell.TH.Syntax as TH
 
 import Data.Smash.Internal
+
+import Text.Read hiding (get)
+
+
+
 
 {- $general
 
@@ -135,6 +148,10 @@ data Can a b = Non | One a | Eno b | Two a b
     , Typeable, Data
     , TH.Lift
     )
+
+-- | A type operator synonym for 'Can'
+--
+type a ⊗ b = Can a b
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
@@ -186,11 +203,7 @@ canEach
       -- ^ eliminator for the 'Eno' case
     -> Can a b
     -> c
-#if MIN_VERSION_base(4,11,0)
 canEach f g = canWithMerge mempty f g (<>)
-#else
-canEach f g = canWithMerge mempty f g mappend
-#endif
 
 -- | Case elimination for the 'Can' datatype, with uniform behaviour over a
 -- 'Monoid' result in the context of an 'Applicative'.
@@ -204,11 +217,7 @@ canEachA
       -- ^ eliminator for the 'Eno' case
     -> Can a b
     -> m c
-#if MIN_VERSION_base(4,11,0)
 canEachA f g = canWithMerge (pure mempty) f g (liftA2 (<>))
-#else
-canEachA f g = canWithMerge (pure mempty) f g (liftA2 mappend)
-#endif
 
 -- -------------------------------------------------------------------- --
 -- Combinators
@@ -566,8 +575,81 @@ canUncurry k = \case
     Two a b -> k (Just a) (Just b)
 
 -- -------------------------------------------------------------------- --
--- Std instances
+-- Functor class instances
 
+instance Eq a => Eq1 (Can a) where
+  liftEq = liftEq2 (==)
+
+instance Eq2 Can where
+  liftEq2 _ _ Non Non = True
+  liftEq2 f _ (One a) (One c) = f a c
+  liftEq2 _ g (Eno b) (Eno d) = g b d
+  liftEq2 f g (Two a b) (Two c d) = f a c && g b d
+  liftEq2 _ _ _ _ = False
+
+instance Ord a => Ord1 (Can a) where
+  liftCompare = liftCompare2 compare
+
+instance Ord2 Can where
+  liftCompare2 _ _ Non Non = EQ
+  liftCompare2 _ _ Non _ = LT
+  liftCompare2 _ _ _ Non = GT
+  liftCompare2 f _ (One a) (One c) = f a c
+  liftCompare2 _ g (Eno b) (Eno d) = g b d
+  liftCompare2 f g (Two a b) (Two c d) = f a c <> g b d
+  liftCompare2 _ _ One{} _ = LT
+  liftCompare2 _ _ _ One{} = GT
+  liftCompare2 _ _ _ Two{} = LT
+  liftCompare2 _ _ Two{} _ = GT
+
+instance Show a => Show1 (Can a) where
+  liftShowsPrec = liftShowsPrec2 showsPrec showList
+
+instance Show2 Can where
+  liftShowsPrec2 _ _ _ _ _ Non = showString "Non"
+  liftShowsPrec2 f _ _ _ d (One a) = showsUnaryWith f "One" d a
+  liftShowsPrec2 _ _ g _ d (Eno b) = showsUnaryWith g "Eno" d b
+  liftShowsPrec2 f _ g _ d (Two a b) = showsBinaryWith f g "Two" d a b
+
+instance Read a => Read1 (Can a) where
+  liftReadsPrec = liftReadsPrec2 readsPrec readList
+
+instance Read2 Can where
+  liftReadPrec2 rpa _ rpb _ = nonP <|> oneP <|> enoP <|> twoP
+    where
+      nonP = Non <$ expectP (Ident "Non")
+      oneP = readData $ readUnaryWith rpa "One" One
+      enoP = readData $ readUnaryWith rpb "Eno" Eno
+      twoP = readData $ readBinaryWith rpa rpb "Two" Two
+
+instance NFData a => NFData1 (Can a) where
+  liftRnf = liftRnf2 rnf
+
+instance NFData2 Can where
+  liftRnf2 f g = \case
+    Non -> ()
+    One a -> f a
+    Eno b -> g b
+    Two a b -> f a `seq` g b
+
+instance Hashable a => Hashable1 (Can a) where
+  liftHashWithSalt = liftHashWithSalt2 hashWithSalt
+
+instance Hashable2 Can where
+  liftHashWithSalt2 f g salt = \case
+    Non -> salt `hashWithSalt` (0 :: Int) `hashWithSalt` ()
+    One a -> salt `hashWithSalt` (1 :: Int) `f` a
+    Eno b -> salt `hashWithSalt` (2 :: Int) `g` b
+    Two a b -> (salt `hashWithSalt` (3 :: Int) `f` a) `g` b
+
+-- -------------------------------------------------------------------- --
+-- Normal instances
+
+instance (NFData a, NFData b) => NFData (Can a b) where
+    rnf Non = ()
+    rnf (One a) = rnf a
+    rnf (Eno b) = rnf b
+    rnf (Two a b) = rnf a `seq` rnf b
 
 instance (Hashable a, Hashable b) => Hashable (Can a b)
 
@@ -633,12 +715,6 @@ instance (Semigroup a, Semigroup b) => Monoid (Can a b) where
   mempty = Non
   mappend = (<>)
 
-instance (NFData a, NFData b) => NFData (Can a b) where
-    rnf Non = ()
-    rnf (One a) = rnf a
-    rnf (Eno b) = rnf b
-    rnf (Two a b) = rnf a `seq` rnf b
-
 instance (Binary a, Binary b) => Binary (Can a b) where
   put Non = put @Int 0
   put (One a) = put @Int 1 >> put a
@@ -651,6 +727,24 @@ instance (Binary a, Binary b) => Binary (Can a b) where
     2 -> Eno <$> get
     3 -> Two <$> get <*> get
     _ -> fail "Invalid Can index"
+
+instance Semigroup a => MonadZip (Can a) where
+  mzipWith f a b = f <$> a <*> b
+
+instance Semigroup a => Alternative (Can a) where
+  empty = Non
+  Non <|> c = c
+  c <|> Non = c
+  One a <|> One b = One (a <> b)
+  One a <|> Eno b = Two a b
+  One a <|> Two b c = Two (a <> b) c
+  Eno a <|> One b = Two b a
+  Eno _ <|> c = c
+  Two a b <|> One c = Two (a <> c) b
+  Two a _ <|> Eno b = Two a b
+  Two a _ <|> Two b c = Two (a <> b) c
+
+instance Semigroup a => MonadPlus (Can a)
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

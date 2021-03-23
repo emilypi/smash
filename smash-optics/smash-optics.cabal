@@ -19,8 +19,7 @@ extra-doc-files:
   README.md
 
 tested-with:
-  GHC ==8.2.2
-   || ==8.4.4
+  GHC ==8.4.4
    || ==8.6.5
    || ==8.8.4
    || ==8.10.4
@@ -37,7 +36,7 @@ library
     Data.Wedge.Optics
 
   build-depends:
-      base         >=4.10 && <4.16
+      base         >=4.11 && <4.16
     , optics-core  ^>=0.3
     , smash        ^>=0.1
 

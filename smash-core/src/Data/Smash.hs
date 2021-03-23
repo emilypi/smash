@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -6,7 +5,9 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Smash
 -- Copyright    : (c) 2020-2021 Emily Pillmore
@@ -19,10 +20,13 @@
 -- This module contains the definition for the 'Smash' datatype. In
 -- practice, this type is isomorphic to @'Maybe' (a,b)@ - the type with
 -- two possibly non-exclusive values and an empty case.
+--
 module Data.Smash
 ( -- * Datatypes
   -- $general
   Smash(..)
+  -- ** Type synonyms
+, type (⨳)
   -- * Combinators
 , toSmash
 , fromSmash
@@ -32,6 +36,8 @@ module Data.Smash
 , hulkSmash
 , isSmash
 , isNada
+, smashDiag
+, smashDiag'
   -- ** Eliminators
 , smash
   -- * Filtering
@@ -68,7 +74,8 @@ module Data.Smash
 
 
 import Control.Applicative (Alternative(..))
-import Control.DeepSeq (NFData(..))
+import Control.DeepSeq
+import Control.Monad.Zip
 
 import Data.Biapplicative
 import Data.Bifoldable
@@ -76,18 +83,21 @@ import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Can (Can(..), can)
 import Data.Data
+import Data.Functor.Classes
 import Data.Functor.Identity
 import Data.Hashable
 import Data.Wedge (Wedge(..))
-#if __GLASGOW_HASKELL__ < 804
-import Data.Semigroup (Semigroup(..))
-#endif
-
 
 import GHC.Generics
-import qualified Language.Haskell.TH.Syntax as TH
+import GHC.Read
+
+import Text.Read hiding (get)
 
 import Data.Smash.Internal
+import qualified Language.Haskell.TH.Syntax as TH
+import Control.Monad
+import Data.Hashable.Lifted
+
 
 {- $general
 
@@ -148,6 +158,10 @@ data Smash a b = Nada | Smash a b
     , TH.Lift
     )
 
+-- | A type operator synonym for 'Smash'
+--
+type a ⨳ b = Smash a b
+
 -- -------------------------------------------------------------------- --
 -- Combinators
 
@@ -199,6 +213,19 @@ isNada _ = False
 --
 isSmash :: Smash a b -> Bool
 isSmash = not . isNada
+
+-- | Create a smash product of self-similar values from a pointed object.
+--
+-- This is the diagonal morphism in Hask*.
+--
+smashDiag :: Maybe a -> Smash a a
+smashDiag Nothing = Nada
+smashDiag (Just a) = Smash a a
+
+-- | See: 'smashDiag'. This is always a 'Smash' value.
+--
+smashDiag' :: a -> Smash a a
+smashDiag' a = Smash a a
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
@@ -431,8 +458,60 @@ swapSmash :: Smash a b -> Smash b a
 swapSmash = smash Nada (flip Smash)
 
 -- -------------------------------------------------------------------- --
--- Std instances
+-- Functor class instances
 
+instance Eq a => Eq1 (Smash a) where
+  liftEq = liftEq2 (==)
+
+instance Eq2 Smash where
+  liftEq2 _ _ Nada Nada = True
+  liftEq2 _ _ Nada _ = False
+  liftEq2 _ _ _ Nada = False
+  liftEq2 f g (Smash a b) (Smash c d) = f a c && g b d
+
+instance Ord a => Ord1 (Smash a) where
+  liftCompare = liftCompare2 compare
+
+instance Ord2 Smash where
+  liftCompare2 _ _ Nada Nada = EQ
+  liftCompare2 _ _ Nada _ = LT
+  liftCompare2 _ _ _ Nada = GT
+  liftCompare2 f g (Smash a b) (Smash c d) = f a c <> g b d
+
+instance Show a => Show1 (Smash a) where
+  liftShowsPrec = liftShowsPrec2 showsPrec showList
+
+instance Show2 Smash where
+  liftShowsPrec2 _ _ _ _ _ Nada = showString "Nada"
+  liftShowsPrec2 f _ g _ d (Smash a b) = showsBinaryWith f g "Smash" d a b
+
+instance Read a => Read1 (Smash a) where
+  liftReadsPrec = liftReadsPrec2 readsPrec readList
+
+instance Read2 Smash where
+  liftReadPrec2 rpa _ rpb _ = nadaP <|> smashP
+    where
+      nadaP = Nada <$ expectP (Ident "Nada")
+      smashP = readData $ readBinaryWith rpa rpb "Smash" Smash
+
+instance NFData a => NFData1 (Smash a) where
+  liftRnf = liftRnf2 rnf
+
+instance NFData2 Smash where
+  liftRnf2 f g = \case
+    Nada -> ()
+    Smash a b -> f a `seq` g b
+
+instance Hashable a => Hashable1 (Smash a) where
+  liftHashWithSalt = liftHashWithSalt2 hashWithSalt
+
+instance Hashable2 Smash where
+  liftHashWithSalt2 f g salt = \case
+    Nada -> salt `hashWithSalt` (0 :: Int) `hashWithSalt` ()
+    Smash a b -> (salt `hashWithSalt` (1 :: Int) `f` a) `g` b
+
+-- -------------------------------------------------------------------- --
+-- Std instances
 
 instance (Hashable a, Hashable b) => Hashable (Smash a b)
 
@@ -445,7 +524,7 @@ instance Monoid a => Applicative (Smash a) where
 
   Nada <*> _ = Nada
   _ <*> Nada = Nada
-  Smash a f <*> Smash c d = Smash (a `mappend` c) (f d)
+  Smash a f <*> Smash c d = Smash (a <> c) (f d)
 
 instance Monoid a => Monad (Smash a) where
   return = pure
@@ -454,7 +533,10 @@ instance Monoid a => Monad (Smash a) where
   Nada >>= _ = Nada
   Smash a b >>= k = case k b of
     Nada -> Nada
-    Smash c d -> Smash (a `mappend` c) d
+    Smash c d -> Smash (a <> c) d
+
+instance Monoid a => MonadZip (Smash a) where
+  mzipWith f a b = f <$> a <*> b
 
 instance (Semigroup a, Semigroup b) => Semigroup (Smash a b) where
   Nada <> b = b
@@ -477,6 +559,14 @@ instance (Binary a, Binary b) => Binary (Smash a b) where
     0 -> pure Nada
     1 -> Smash <$> get <*> get
     _ -> fail "Invalid Smash index"
+
+instance Monoid a => Alternative (Smash a) where
+  empty = Nada
+  Nada <|> c = c
+  c <|> Nada = c
+  Smash a _ <|> Smash c d = Smash (a <> c) d
+
+instance Monoid a => MonadPlus (Smash a)
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

@@ -1,3 +1,4 @@
+{-# language Safe #-}
 -- |
 -- Module       : Data.Smash.Internal
 -- Copyright    : (c) 2020-2021 Emily Pillmore
@@ -6,7 +7,7 @@
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>,
 --                Asad Saeeduddin <https://github.com/masaeedu>
 -- Stability    : Experimental
--- Portability  : CPP, RankNTypes, TypeApplications
+-- Portability  : non-portable
 --
 -- This module contains utilities for distributing and codistributing
 -- bifunctors over monoidal actions.

@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -7,6 +6,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Wedge
 -- Copyright    : (c) 2020-2021 Emily Pillmore
@@ -19,10 +20,13 @@
 -- This module contains the definition for the 'Wedge' datatype. In
 -- practice, this type is isomorphic to @'Maybe' ('Either' a b)@ - the type with
 -- two possibly non-exclusive values and an empty case.
+--
 module Data.Wedge
 ( -- * Datatypes
   -- $general
   Wedge(..)
+  -- ** Type synonyms
+, type (∨)
   -- * Combinators
 , quotWedge
 , wedgeLeft
@@ -65,23 +69,29 @@ module Data.Wedge
 
 
 import Control.Applicative (Alternative(..))
-import Control.DeepSeq (NFData(..))
+import Control.DeepSeq
+import Control.Monad.Zip
 
 import Data.Bifunctor
 import Data.Bifoldable
 import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Data
+import Data.Functor.Classes
 import Data.Functor.Identity
 import Data.Hashable
-#if __GLASGOW_HASKELL__ < 804
-import Data.Semigroup (Semigroup(..))
-#endif
 
 import GHC.Generics
+import GHC.Read
+
 import qualified Language.Haskell.TH.Syntax as TH
 
+import Text.Read hiding (get)
+
 import Data.Smash.Internal
+import Control.Monad
+import Data.Hashable.Lifted
+
 
 {- $general
 
@@ -127,6 +137,10 @@ data Wedge a b = Nowhere | Here a | There b
     , Typeable, Data
     , TH.Lift
     )
+
+-- | A type operator synonym for 'Wedge'.
+--
+type a ∨ b = Wedge a b
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
@@ -418,6 +432,66 @@ swapWedge :: Wedge a b -> Wedge b a
 swapWedge = wedge Nowhere There Here
 
 -- -------------------------------------------------------------------- --
+-- Functor class instances
+
+instance Eq a => Eq1 (Wedge a) where
+  liftEq = liftEq2 (==)
+
+instance Eq2 Wedge where
+  liftEq2 _ _ Nowhere Nowhere = True
+  liftEq2 f _ (Here a) (Here c) = f a c
+  liftEq2 _ g (There b) (There d) = g b d
+  liftEq2 _ _ _ _ = False
+
+instance Ord a => Ord1 (Wedge a) where
+  liftCompare = liftCompare2 compare
+
+instance Ord2 Wedge where
+  liftCompare2 _ _ Nowhere Nowhere = EQ
+  liftCompare2 _ _ Nowhere _ = LT
+  liftCompare2 _ _ _ Nowhere = GT
+  liftCompare2 f _ (Here a) (Here c) = f a c
+  liftCompare2 _ _ Here{} There{} = LT
+  liftCompare2 _ _ There{} Here{} = GT
+  liftCompare2 _ g (There b) (There d) = g b d
+
+instance Show a => Show1 (Wedge a) where
+  liftShowsPrec = liftShowsPrec2 showsPrec showList
+
+instance Show2 Wedge where
+  liftShowsPrec2 _ _ _ _ _ Nowhere = showString "Nowhere"
+  liftShowsPrec2 f _ _ _ d (Here a) = showsUnaryWith f "Here" d a
+  liftShowsPrec2 _ _ g _ d (There b) = showsUnaryWith g "There" d b
+
+instance Read a => Read1 (Wedge a) where
+  liftReadsPrec = liftReadsPrec2 readsPrec readList
+
+instance Read2 Wedge where
+  liftReadPrec2 rpa _ rpb _ = nowhereP <|> hereP <|> thereP
+    where
+      nowhereP = Nowhere <$ expectP (Ident "Nowhere")
+      hereP = readData $ readUnaryWith rpa "Here" Here
+      thereP = readData $ readUnaryWith rpb "There" There
+
+instance Hashable a => Hashable1 (Wedge a) where
+  liftHashWithSalt = liftHashWithSalt2 hashWithSalt
+
+instance Hashable2 Wedge where
+  liftHashWithSalt2 f g salt = \case
+    Nowhere -> salt `hashWithSalt` (0 :: Int) `hashWithSalt` ()
+    Here a -> salt `hashWithSalt` (1 :: Int) `f` a
+    There b -> salt `hashWithSalt` (2 :: Int) `g` b
+
+instance NFData a => NFData1 (Wedge a) where
+  liftRnf = liftRnf2 rnf
+
+instance NFData2 Wedge where
+  liftRnf2 f g = \case
+    Nowhere -> ()
+    Here a -> f a
+    There b -> g b
+
+-- -------------------------------------------------------------------- --
 -- Std instances
 
 instance (Hashable a, Hashable b) => Hashable (Wedge a b)
@@ -482,6 +556,20 @@ instance (Binary a, Binary b) => Binary (Wedge a b) where
     1 -> Here <$> get
     2 -> There <$> get
     _ -> fail "Invalid Wedge index"
+
+instance Semigroup a => MonadZip (Wedge a) where
+  mzipWith f a b = f <$> a <*> b
+
+instance Monoid a => Alternative (Wedge a) where
+  empty = Nowhere
+  Nowhere <|> c = c
+  c <|> Nowhere = c
+  Here a <|> Here b = Here (a <> b)
+  Here _ <|> There b = There b
+  There a <|> Here _ = There a
+  There _ <|> There b = There b
+
+instance Monoid a => MonadPlus (Wedge a)
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors
