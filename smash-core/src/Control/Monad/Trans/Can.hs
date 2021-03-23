@@ -4,6 +4,19 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# language Safe #-}
+-- |
+-- Module       : Control.Monad.Trans.Can
+-- Copyright    : (c) 2020-2021 Emily Pillmore
+-- License      : BSD-3-Clause
+--
+-- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
+-- Stability    : Experimental
+-- Portability  : Non-portable
+--
+-- This module contains utilities for the monad transformer
+-- for the pointed product.
+--
 module Control.Monad.Trans.Can
 ( CanT(runCanT)
 , mapCanT
@@ -87,7 +100,7 @@ instance (Semigroup r, MonadReader r m) => MonadReader r (CanT r m) where
       Two r b -> Two (f r) b
 
 instance (Monoid s, MonadState s m) => MonadState s (CanT s m) where
-  get = CanT $ One <$> get
+  get = CanT $ Eno <$> get
   put s = CanT $ Eno <$> put s
 
 

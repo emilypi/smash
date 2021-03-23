@@ -6,6 +6,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Can
 -- Copyright    : (c) 2020-2021 Emily Pillmore
@@ -18,6 +19,7 @@
 -- This module contains the definition for the 'Can' datatype. In
 -- practice, this type is isomorphic to 'Maybe' 'These' - the type with
 -- two possibly non-exclusive values and an empty case.
+--
 module Data.Can
 ( -- * Datatypes
   -- $general

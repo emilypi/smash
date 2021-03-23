@@ -6,6 +6,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Smash
 -- Copyright    : (c) 2020-2021 Emily Pillmore
@@ -18,6 +19,7 @@
 -- This module contains the definition for the 'Smash' datatype. In
 -- practice, this type is isomorphic to @'Maybe' (a,b)@ - the type with
 -- two possibly non-exclusive values and an empty case.
+--
 module Data.Smash
 ( -- * Datatypes
   -- $general
