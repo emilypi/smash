@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -66,22 +65,26 @@ module Data.Wedge
 
 import Control.Applicative (Alternative(..))
 import Control.DeepSeq (NFData(..))
+import Control.Monad.Zip
 
 import Data.Bifunctor
 import Data.Bifoldable
 import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Data
+import Data.Functor.Classes
 import Data.Functor.Identity
 import Data.Hashable
-#if __GLASGOW_HASKELL__ < 804
-import Data.Semigroup (Semigroup(..))
-#endif
 
 import GHC.Generics
+import GHC.Read
+
 import qualified Language.Haskell.TH.Syntax as TH
 
+import Text.Read hiding (get)
+
 import Data.Smash.Internal
+
 
 {- $general
 
@@ -420,6 +423,33 @@ swapWedge = wedge Nowhere There Here
 -- -------------------------------------------------------------------- --
 -- Std instances
 
+instance Eq2 Wedge where
+  liftEq2 _ _ Nowhere Nowhere = True
+  liftEq2 f _ (Here a) (Here c) = f a c
+  liftEq2 _ g (There b) (There d) = g b d
+  liftEq2 _ _ _ _ = False
+
+instance Ord2 Wedge where
+  liftCompare2 _ _ Nowhere Nowhere = EQ
+  liftCompare2 _ _ Nowhere _ = LT
+  liftCompare2 _ _ _ Nowhere = GT
+  liftCompare2 f _ (Here a) (Here c) = f a c
+  liftCompare2 _ _ Here{} There{} = LT
+  liftCompare2 _ _ There{} Here{} = GT
+  liftCompare2 _ g (There b) (There d) = g b d
+
+instance Show2 Wedge where
+  liftShowsPrec2 _ _ _ _ _ Nowhere = showString "Nowhere"
+  liftShowsPrec2 f _ _ _ d (Here a) = showsUnaryWith f "Here" d a
+  liftShowsPrec2 _ _ g _ d (There b) = showsUnaryWith g "There" d b
+
+instance Read2 Wedge where
+  liftReadPrec2 rpa _ rpb _ = nowhereP <|> hereP <|> thereP
+    where
+      nowhereP = Nowhere <$ expectP (Ident "Nowhere")
+      hereP = readData $ readUnaryWith rpa "Here" Here
+      thereP = readData $ readUnaryWith rpb "There" There
+
 instance (Hashable a, Hashable b) => Hashable (Wedge a b)
 
 instance Functor (Wedge a) where
@@ -482,6 +512,9 @@ instance (Binary a, Binary b) => Binary (Wedge a b) where
     1 -> Here <$> get
     2 -> There <$> get
     _ -> fail "Invalid Wedge index"
+
+instance Semigroup a => MonadZip (Wedge a) where
+  mzipWith f a b = f <$> a <*> b
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

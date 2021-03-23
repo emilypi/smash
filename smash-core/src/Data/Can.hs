@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -75,6 +74,7 @@ module Data.Can
 
 import Control.Applicative (Alternative(..), liftA2)
 import Control.DeepSeq (NFData(..))
+import Control.Monad.Zip
 
 import Data.Biapplicative
 import Data.Bifoldable
@@ -82,17 +82,21 @@ import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Data
 import qualified Data.Either as E
+import Data.Functor.Classes
 import Data.Foldable
 import Data.Functor.Identity
 import Data.Hashable
-#if __GLASGOW_HASKELL__ < 804
-import Data.Semigroup (Semigroup(..))
-#endif
 
 import GHC.Generics
+import GHC.Read
+
 import qualified Language.Haskell.TH.Syntax as TH
 
 import Data.Smash.Internal
+
+import Text.Read hiding (get)
+
+
 
 {- $general
 
@@ -186,11 +190,7 @@ canEach
       -- ^ eliminator for the 'Eno' case
     -> Can a b
     -> c
-#if MIN_VERSION_base(4,11,0)
 canEach f g = canWithMerge mempty f g (<>)
-#else
-canEach f g = canWithMerge mempty f g mappend
-#endif
 
 -- | Case elimination for the 'Can' datatype, with uniform behaviour over a
 -- 'Monoid' result in the context of an 'Applicative'.
@@ -204,11 +204,7 @@ canEachA
       -- ^ eliminator for the 'Eno' case
     -> Can a b
     -> m c
-#if MIN_VERSION_base(4,11,0)
 canEachA f g = canWithMerge (pure mempty) f g (liftA2 (<>))
-#else
-canEachA f g = canWithMerge (pure mempty) f g (liftA2 mappend)
-#endif
 
 -- -------------------------------------------------------------------- --
 -- Combinators
@@ -568,6 +564,38 @@ canUncurry k = \case
 -- -------------------------------------------------------------------- --
 -- Std instances
 
+instance Eq2 Can where
+  liftEq2 _ _ Non Non = True
+  liftEq2 f _ (One a) (One c) = f a c
+  liftEq2 _ g (Eno b) (Eno d) = g b d
+  liftEq2 f g (Two a b) (Two c d) = f a c && g b d
+  liftEq2 _ _ _ _ = False
+
+instance Ord2 Can where
+  liftCompare2 _ _ Non Non = EQ
+  liftCompare2 _ _ Non _ = LT
+  liftCompare2 _ _ _ Non = GT
+  liftCompare2 f _ (One a) (One c) = f a c
+  liftCompare2 _ g (Eno b) (Eno d) = g b d
+  liftCompare2 f g (Two a b) (Two c d) = f a c <> g b d
+  liftCompare2 _ _ One{} _ = LT
+  liftCompare2 _ _ Eno{} Two{} = LT
+  liftCompare2 _ _ Eno{} One{} = GT
+  liftCompare2 _ _ Two{} _ = GT
+
+instance Show2 Can where
+  liftShowsPrec2 _ _ _ _ _ Non = showString "Non"
+  liftShowsPrec2 f _ _ _ d (One a) = showsUnaryWith f "One" d a
+  liftShowsPrec2 _ _ g _ d (Eno b) = showsUnaryWith g "Eno" d b
+  liftShowsPrec2 f _ g _ d (Two a b) = showsBinaryWith f g "Two" d a b
+
+instance Read2 Can where
+  liftReadPrec2 rpa _ rpb _ = nonP <|> oneP <|> enoP <|> twoP
+    where
+      nonP = Non <$ expectP (Ident "Non")
+      oneP = readData $ readUnaryWith rpa "One" One
+      enoP = readData $ readUnaryWith rpb "Eno" Eno
+      twoP = readData $ readBinaryWith rpa rpb "Two" Two
 
 instance (Hashable a, Hashable b) => Hashable (Can a b)
 
@@ -651,6 +679,9 @@ instance (Binary a, Binary b) => Binary (Can a b) where
     2 -> Eno <$> get
     3 -> Two <$> get <*> get
     _ -> fail "Invalid Can index"
+
+instance Semigroup a => MonadZip (Can a) where
+  mzipWith f a b = f <$> a <*> b
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

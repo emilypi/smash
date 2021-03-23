@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -83,12 +82,13 @@ import Data.Hashable
 import Data.Wedge (Wedge(..))
 
 import GHC.Generics
-import GHC.Read (expectP)
+import GHC.Read
 
-import Text.Read.Lex (Lexeme(Ident))
+import Text.Read hiding (get)
 
 import Data.Smash.Internal
 import qualified Language.Haskell.TH.Syntax as TH
+
 
 
 
