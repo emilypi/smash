@@ -31,7 +31,7 @@ library
 
   build-depends:
       aeson                 >=1.4   && <1.6
-    , base                  >=4.11  && <4.16
+    , base                  >=4.1  && <4.16
     , smash                 ^>=0.1.1
     , unordered-containers
 

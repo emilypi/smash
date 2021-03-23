@@ -1,6 +1,6 @@
 # Revision history for possibly-can
 
-## 0.2
+## 0.1.2
 
 * Add Monad Transformers for `Can`, `Wedge`, and `Smash` ([#25](https://github.com/emilypi/smash/pull/25))
 * Add Safe haskell pragmas
