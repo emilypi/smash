@@ -69,6 +69,7 @@ module Data.Smash
 
 import Control.Applicative (Alternative(..))
 import Control.DeepSeq (NFData(..))
+import Control.Monad.Zip
 
 import Data.Biapplicative
 import Data.Bifoldable
@@ -76,18 +77,21 @@ import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Can (Can(..), can)
 import Data.Data
+import Data.Functor.Classes
 import Data.Functor.Identity
 import Data.Hashable
 import Data.Wedge (Wedge(..))
-#if __GLASGOW_HASKELL__ < 804
-import Data.Semigroup (Semigroup(..))
-#endif
-
 
 import GHC.Generics
-import qualified Language.Haskell.TH.Syntax as TH
+import GHC.Read (expectP)
+
+import Text.Read.Lex (Lexeme(Ident))
 
 import Data.Smash.Internal
+import qualified Language.Haskell.TH.Syntax as TH
+
+
+
 
 {- $general
 
@@ -433,6 +437,27 @@ swapSmash = smash Nada (flip Smash)
 -- -------------------------------------------------------------------- --
 -- Std instances
 
+instance Eq2 Smash where
+  liftEq2 _ _ Nada Nada = True
+  liftEq2 _ _ Nada _ = False
+  liftEq2 _ _ _ Nada = False
+  liftEq2 f g (Smash a b) (Smash c d) = f a c && g b d
+
+instance Ord2 Smash where
+  liftCompare2 _ _ Nada Nada = EQ
+  liftCompare2 _ _ Nada _ = LT
+  liftCompare2 _ _ _ Nada = GT
+  liftCompare2 f g (Smash a b) (Smash c d) = f a c <> g b d
+
+instance Show2 Smash where
+  liftShowsPrec2 _ _ _ _ _ Nada = showString "Nada"
+  liftShowsPrec2 f _ g _ d (Smash a b) = showsBinaryWith f g "Smash" d a b
+
+instance Read2 Smash where
+  liftReadPrec2 rpa _ rpb _ = nadaP <|> smashP
+    where
+      nadaP = Nada <$ expectP (Ident "Nada")
+      smashP = readData $ readBinaryWith rpa rpb "Smash" Smash
 
 instance (Hashable a, Hashable b) => Hashable (Smash a b)
 
@@ -445,7 +470,7 @@ instance Monoid a => Applicative (Smash a) where
 
   Nada <*> _ = Nada
   _ <*> Nada = Nada
-  Smash a f <*> Smash c d = Smash (a `mappend` c) (f d)
+  Smash a f <*> Smash c d = Smash (a <> c) (f d)
 
 instance Monoid a => Monad (Smash a) where
   return = pure
@@ -454,7 +479,10 @@ instance Monoid a => Monad (Smash a) where
   Nada >>= _ = Nada
   Smash a b >>= k = case k b of
     Nada -> Nada
-    Smash c d -> Smash (a `mappend` c) d
+    Smash c d -> Smash (a <> c) d
+
+instance Monoid a => MonadZip (Smash a) where
+  mzipWith f a b = f <$> a <*> b
 
 instance (Semigroup a, Semigroup b) => Semigroup (Smash a b) where
   Nada <> b = b

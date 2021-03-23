@@ -28,17 +28,21 @@ source-repository head
 
 library
   exposed-modules:
+    Control.Monad.Trans.Can
+    Control.Monad.Trans.Smash
+    Control.Monad.Trans.Wedge
     Data.Can
     Data.Smash
     Data.Wedge
 
   other-modules:    Data.Smash.Internal
   build-depends:
-      base             >=4.10 && <4.16
+      base             >=4.11 && <4.16
     , bifunctors       ^>=5.5
     , binary           ^>=0.8
     , deepseq          ^>=1.4
     , hashable         ^>=1.3
+    , mtl
     , template-haskell >=2.2 && < 3.0
 
   hs-source-dirs:   src
