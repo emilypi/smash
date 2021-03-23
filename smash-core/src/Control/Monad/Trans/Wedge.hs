@@ -18,7 +18,9 @@
 -- for the pointed coproduct.
 --
 module Control.Monad.Trans.Wedge
-( WedgeT(runWedgeT)
+( -- * Monad transformer
+  WedgeT(runWedgeT)
+  -- ** Combinators
 , mapWedgeT
 ) where
 
@@ -69,11 +71,22 @@ instance (Semigroup a, Monad m) => Monad (WedgeT a m) where
 
 instance (Semigroup r, MonadReader r m) => MonadReader r (WedgeT r m) where
   ask = WedgeT (asks Here)
-  local f (WedgeT m) = WedgeT (go <$> m) where
+  local f (WedgeT m) = WedgeT $ local f m
+
+instance (Semigroup w, MonadWriter w m) => MonadWriter w (WedgeT w m) where
+  tell w = WedgeT $ There <$> tell w
+
+  listen (WedgeT m) = WedgeT $ go <$> listen m where
     go = \case
-      Nowhere -> Nowhere
-      Here r -> Here (f r)
-      There b -> There b
+      (Nowhere, _) -> Nowhere
+      (Here w, w') -> Here (w <> w')
+      (There a, w) -> There (a, w)
+
+  pass (WedgeT m) = WedgeT $ pass (go <$> m) where
+    go = \case
+     Nowhere -> (Nowhere, id)
+     Here w -> (Here w, (w <>))
+     There (a,f) -> (There a, f)
 
 instance (Monoid s, MonadState s m) => MonadState s (WedgeT s m) where
   get = WedgeT $ There <$> get

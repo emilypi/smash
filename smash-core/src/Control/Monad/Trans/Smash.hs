@@ -18,16 +18,19 @@
 -- for the smash product.
 --
 module Control.Monad.Trans.Smash
-( SmashT(runSmashT)
+( -- * Monad transformer
+  SmashT(runSmashT)
+  -- ** Combinators
 , mapSmashT
 ) where
 
 
 import Data.Smash
+
 import Control.Applicative (liftA2)
 import Control.Monad.Writer
 import Control.Monad.Reader
-import Control.Monad.State.Class
+import Control.Monad.State
 
 
 -- | A monad transformer for the smash product,
@@ -67,30 +70,26 @@ instance (Monoid a, Monad m) => Monad (SmashT a m) where
           Smash a' b' -> Smash (a <> a') b'
       Nada -> return Nada
 
--- instance (Monoid w, MonadWriter w m) => MonadWriter w (SmashT w m) where
---   tell a = SmashT $ (\w -> Smash w ()) <$> tell a
+instance (Monoid r, MonadReader r m) => MonadReader r (SmashT r m) where
+  ask = SmashT $ asks (Smash mempty)
+  local f (SmashT m) = SmashT $ local f m
 
---   listen (SmashT m) = SmashT $ go <$> listen m where
---     go (c,w) = case c of
---       Nada -> Nada
---       Smash a b -> Smash a (b,w)
+instance (Semigroup w, MonadWriter w m) => MonadWriter w (SmashT w m) where
+  tell w = SmashT $ Smash w <$> tell w
 
---   pass (SmashT m) = SmashT (go <$> m) where
---     go = \case
---       Nada -> Nada
---       Smash w (a, ww) -> Smash (ww w) a
+  listen (SmashT m) = SmashT $ go <$> listen m where
+    go (c,w) = case c of
+      Nada -> Nada
+      Smash a b -> Smash (a <> w) (b, a <> w)
 
--- instance (Monoid r, MonadReader r m) => MonadReader r (SmashT r m) where
---   ask = SmashT $ asks (Smash mempty)
---   local f (SmashT m) = SmashT (go <$> m) where
---     go = \case
---       Nada -> Nada
---       Smash r b -> Smash (f r) b
+  pass (SmashT m) = SmashT $ pass (go <$> m) where
+    go = \case
+      Nada -> (Nada, id)
+      Smash w (a, f) -> (Smash w a, f)
 
--- instance (Monoid s, MonadState s m) => MonadState s (SmashT s m) where
---   get = SmashT $ Smash mempty <$> get
---   put s = SmashT $ Smash mempty <$> put s
+instance (Monoid s, MonadState s m) => MonadState s (SmashT s m) where
+  get = SmashT $ gets (Smash mempty)
+  put s = SmashT $ Smash s <$> put s
 
-
--- instance MonadTrans (SmashT ()) where
---   lift = SmashT . fmap (Smash ())
+instance MonadTrans (SmashT ()) where
+  lift = SmashT . fmap (Smash ())

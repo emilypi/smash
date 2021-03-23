@@ -6,6 +6,8 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Can
@@ -24,6 +26,8 @@ module Data.Can
 ( -- * Datatypes
   -- $general
   Can(..)
+  -- ** Type synonyms
+, type (⊗)
   -- * Combinators
 , canFst
 , canSnd
@@ -77,6 +81,7 @@ module Data.Can
 import Control.Applicative (Alternative(..), liftA2)
 import Control.DeepSeq (NFData(..))
 import Control.Monad.Zip
+import Control.Monad
 
 import Data.Biapplicative
 import Data.Bifoldable
@@ -141,6 +146,10 @@ data Can a b = Non | One a | Eno b | Two a b
     , Typeable, Data
     , TH.Lift
     )
+
+-- | A type operator synonym for 'Can'
+--
+type a ⊗ b = Can a b
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
@@ -684,6 +693,21 @@ instance (Binary a, Binary b) => Binary (Can a b) where
 
 instance Semigroup a => MonadZip (Can a) where
   mzipWith f a b = f <$> a <*> b
+
+instance Semigroup a => Alternative (Can a) where
+  empty = Non
+  Non <|> c = c
+  c <|> Non = c
+  One a <|> One b = One (a <> b)
+  One a <|> Eno b = Two a b
+  One a <|> Two b c = Two (a <> b) c
+  Eno a <|> One b = Two b a
+  Eno _ <|> c = c
+  Two a b <|> One c = Two (a <> c) b
+  Two a _ <|> Eno b = Two a b
+  Two a _ <|> Two b c = Two (a <> b) c
+
+instance Semigroup a => MonadPlus (Can a)
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

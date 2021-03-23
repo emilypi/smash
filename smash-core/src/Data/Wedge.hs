@@ -6,6 +6,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Wedge
@@ -24,6 +25,8 @@ module Data.Wedge
 ( -- * Datatypes
   -- $general
   Wedge(..)
+  -- ** Type synonyms
+, type (∨)
   -- * Combinators
 , quotWedge
 , wedgeLeft
@@ -86,6 +89,7 @@ import qualified Language.Haskell.TH.Syntax as TH
 import Text.Read hiding (get)
 
 import Data.Smash.Internal
+import Control.Monad
 
 
 {- $general
@@ -132,6 +136,10 @@ data Wedge a b = Nowhere | Here a | There b
     , Typeable, Data
     , TH.Lift
     )
+
+-- | A type operator synonym for 'Wedge'.
+--
+type a ∨ b = Wedge a b
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
@@ -517,6 +525,17 @@ instance (Binary a, Binary b) => Binary (Wedge a b) where
 
 instance Semigroup a => MonadZip (Wedge a) where
   mzipWith f a b = f <$> a <*> b
+
+instance Monoid a => Alternative (Wedge a) where
+  empty = Nowhere
+  Nowhere <|> c = c
+  c <|> Nowhere = c
+  Here a <|> Here b = Here (a <> b)
+  Here _ <|> There b = There b
+  There a <|> Here _ = There a
+  There _ <|> There b = There b
+
+instance Monoid a => MonadPlus (Wedge a)
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors

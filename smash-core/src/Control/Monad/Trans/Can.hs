@@ -18,7 +18,9 @@
 -- for the pointed product.
 --
 module Control.Monad.Trans.Can
-( CanT(runCanT)
+( -- * Monad Transformer
+  CanT(runCanT)
+  -- ** Combinators
 , mapCanT
 ) where
 
@@ -73,34 +75,30 @@ instance (Semigroup a, Monad m) => Monad (CanT a m) where
       One a -> return $ One a
       Non -> return Non
 
-instance (Monoid w, MonadWriter w m) => MonadWriter w (CanT w m) where
+instance (Semigroup w, MonadWriter w m) => MonadWriter w (CanT w m) where
   tell a = CanT $ Eno <$> tell a
 
   listen (CanT m) = CanT $ go <$> listen m where
     go (c,w) = case c of
       Non -> Non
-      One a -> One a
+      One a -> One (w <> a)
       Eno b -> Eno (b,w)
-      Two a b -> Two a (b,w)
+      Two a b -> Two (w <> a) (b, w <> a)
 
-  pass (CanT m) = CanT (go <$> m) where
+  pass (CanT m) = CanT $ pass (go <$> m) where -- collect $200.
     go = \case
-      Non -> Non
-      One w -> One w
-      Eno (a, _) -> Eno a
-      Two w (a, ww) -> Two (ww w) a
+      Non -> (Non, id)
+      One w -> (One w, (w <>))
+      Eno (a,f) -> (Eno a, f)
+      Two w (a,f) -> (Two w a, f)
+
 
 instance (Semigroup r, MonadReader r m) => MonadReader r (CanT r m) where
   ask = CanT (asks One)
-  local f (CanT m) = CanT (go <$> m) where
-    go = \case
-      Non -> Non
-      One r -> One (f r)
-      Eno b -> Eno b
-      Two r b -> Two (f r) b
+  local f (CanT m) = CanT (local f m)
 
-instance (Monoid s, MonadState s m) => MonadState s (CanT s m) where
-  get = CanT $ Eno <$> get
+instance (MonadState s m, Semigroup s) => MonadState s (CanT s m) where
+  get = CanT $ gets Eno
   put s = CanT $ Eno <$> put s
 
 

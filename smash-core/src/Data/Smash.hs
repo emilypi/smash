@@ -20,10 +20,13 @@
 -- practice, this type is isomorphic to @'Maybe' (a,b)@ - the type with
 -- two possibly non-exclusive values and an empty case.
 --
+{-# LANGUAGE TypeOperators #-}
 module Data.Smash
 ( -- * Datatypes
   -- $general
   Smash(..)
+  -- ** Type synonyms
+, type (⨳)
   -- * Combinators
 , toSmash
 , fromSmash
@@ -33,6 +36,8 @@ module Data.Smash
 , hulkSmash
 , isSmash
 , isNada
+, smashDiag
+, smashDiag'
   -- ** Eliminators
 , smash
   -- * Filtering
@@ -90,6 +95,7 @@ import Text.Read hiding (get)
 
 import Data.Smash.Internal
 import qualified Language.Haskell.TH.Syntax as TH
+import Control.Monad
 
 
 {- $general
@@ -151,6 +157,10 @@ data Smash a b = Nada | Smash a b
     , TH.Lift
     )
 
+-- | A type operator synonym for 'Smash'
+--
+type a ⨳ b = Smash a b
+
 -- -------------------------------------------------------------------- --
 -- Combinators
 
@@ -202,6 +212,19 @@ isNada _ = False
 --
 isSmash :: Smash a b -> Bool
 isSmash = not . isNada
+
+-- | Create a smash product of self-similar values from a pointed object.
+--
+-- This is the diagonal morphism in Hask*.
+--
+smashDiag :: Maybe a -> Smash a a
+smashDiag Nothing = Nada
+smashDiag (Just a) = Smash a a
+
+-- | See: 'smashDiag'. This is always a 'Smash' value.
+--
+smashDiag' :: a -> Smash a a
+smashDiag' a = Smash a a
 
 -- -------------------------------------------------------------------- --
 -- Eliminators
@@ -504,6 +527,14 @@ instance (Binary a, Binary b) => Binary (Smash a b) where
     0 -> pure Nada
     1 -> Smash <$> get <*> get
     _ -> fail "Invalid Smash index"
+
+instance Monoid a => Alternative (Smash a) where
+  empty = Nada
+  Nada <|> c = c
+  c <|> Nada = c
+  Smash a _ <|> Smash c d = Smash (a <> c) d
+
+instance Monoid a => MonadPlus (Smash a)
 
 -- -------------------------------------------------------------------- --
 -- Bifunctors
