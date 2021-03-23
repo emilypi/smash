@@ -90,9 +90,6 @@ import Data.Smash.Internal
 import qualified Language.Haskell.TH.Syntax as TH
 
 
-
-
-
 {- $general
 
 Categorically, the 'Smash' datatype represents a special type of product, a
