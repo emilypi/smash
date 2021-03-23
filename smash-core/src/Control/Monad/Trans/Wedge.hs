@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# language Safe #-}
 -- |
@@ -31,6 +32,7 @@ import Control.Monad.Writer
 import Control.Monad.Reader
 import Control.Monad.State.Class
 import Control.Monad.Except
+import Control.Monad.RWS
 
 -- | A monad transformer for the pointed product,
 -- parameterized by:
@@ -52,6 +54,7 @@ newtype WedgeT a m b = WedgeT { runWedgeT :: m (Wedge a b) }
 mapWedgeT :: (m (Wedge a b) -> n (Wedge c d)) -> WedgeT a m b -> WedgeT c n d
 mapWedgeT f = WedgeT . f . runWedgeT
 
+
 instance Functor f => Functor (WedgeT a f) where
   fmap f = WedgeT . fmap (fmap f) . runWedgeT
 
@@ -69,29 +72,30 @@ instance (Semigroup a, Monad m) => Monad (WedgeT a m) where
       Here a -> return $ Here a
       There a -> runWedgeT $ k a
 
-instance (Semigroup r, MonadReader r m) => MonadReader r (WedgeT r m) where
-  ask = WedgeT (asks Here)
+instance (MonadReader r m, Semigroup t) => MonadReader r (WedgeT t m) where
+  ask = lift ask
   local f (WedgeT m) = WedgeT $ local f m
 
-instance (Semigroup w, MonadWriter w m) => MonadWriter w (WedgeT w m) where
-  tell w = WedgeT $ There <$> tell w
+instance (MonadWriter w m, Semigroup t) => MonadWriter w (WedgeT t m) where
+  tell = lift . tell
 
   listen (WedgeT m) = WedgeT $ go <$> listen m where
     go = \case
       (Nowhere, _) -> Nowhere
-      (Here w, w') -> Here (w <> w')
+      (Here t, _) -> Here t
       (There a, w) -> There (a, w)
 
   pass (WedgeT m) = WedgeT $ pass (go <$> m) where
     go = \case
      Nowhere -> (Nowhere, id)
-     Here w -> (Here w, (w <>))
+     Here w -> (Here w, id)
      There (a,f) -> (There a, f)
 
-instance (Monoid s, MonadState s m) => MonadState s (WedgeT s m) where
-  get = WedgeT $ There <$> get
-  put s = WedgeT $ There <$> put s
+instance (MonadState s m, Semigroup t) => MonadState s (WedgeT t m) where
+  get = lift get
+  put = lift . put
 
+instance (Semigroup t, MonadRWS r w s m) => MonadRWS r w s (WedgeT t m)
 
 instance MonadTrans (WedgeT a) where
   lift = WedgeT . fmap There

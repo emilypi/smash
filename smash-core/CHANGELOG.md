@@ -4,7 +4,7 @@
 
 * Add Monad Transformers for `Can`, `Wedge`, and `Smash` ([#25](https://github.com/emilypi/smash/pull/25))
 * Add Safe haskell pragmas
-* Add instances for `Eq2`, `Ord2`, `Show2`, and `Read2`.
+* Add instances for all functor classes.
 * Add instances for `MonadZip`
 * Add nice pointfree definitions for some functions ([#24](https://github.com/emilypi/smash/pull/24), thanks @subttle!)
 * Add unfolds to the Api.

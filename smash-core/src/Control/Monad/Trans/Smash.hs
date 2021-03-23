@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# language Safe #-}
 -- |
@@ -31,6 +32,7 @@ import Control.Applicative (liftA2)
 import Control.Monad.Writer
 import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad.RWS
 
 
 -- | A monad transformer for the smash product,
@@ -70,26 +72,28 @@ instance (Monoid a, Monad m) => Monad (SmashT a m) where
           Smash a' b' -> Smash (a <> a') b'
       Nada -> return Nada
 
-instance (Monoid r, MonadReader r m) => MonadReader r (SmashT r m) where
-  ask = SmashT $ asks (Smash mempty)
+instance (Monoid a, MonadReader r m) => MonadReader r (SmashT a m) where
+  ask = lift ask
   local f (SmashT m) = SmashT $ local f m
 
-instance (Semigroup w, MonadWriter w m) => MonadWriter w (SmashT w m) where
-  tell w = SmashT $ Smash w <$> tell w
+instance (Monoid a, MonadWriter w m) => MonadWriter w (SmashT a m) where
+  tell = lift . tell
 
   listen (SmashT m) = SmashT $ go <$> listen m where
     go (c,w) = case c of
       Nada -> Nada
-      Smash a b -> Smash (a <> w) (b, a <> w)
+      Smash a b -> Smash a (b, w)
 
   pass (SmashT m) = SmashT $ pass (go <$> m) where
     go = \case
       Nada -> (Nada, id)
-      Smash w (a, f) -> (Smash w a, f)
+      Smash t (a, f) -> (Smash t a, f)
 
-instance (Monoid s, MonadState s m) => MonadState s (SmashT s m) where
-  get = SmashT $ gets (Smash mempty)
-  put s = SmashT $ Smash s <$> put s
+instance (Monoid t, MonadState s m) => MonadState s (SmashT t m) where
+  get = lift get
+  put = lift . put
 
-instance MonadTrans (SmashT ()) where
-  lift = SmashT . fmap (Smash ())
+instance (Monoid t, MonadRWS r w s m) => MonadRWS r w s (SmashT t m)
+
+instance Monoid a => MonadTrans (SmashT a) where
+  lift = SmashT . fmap (Smash mempty)

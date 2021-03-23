@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# language Safe #-}
 -- |
@@ -31,6 +32,7 @@ import Control.Monad.Writer
 import Control.Monad.Reader
 import Control.Monad.State.Class
 import Control.Monad.Except
+import Control.Monad.RWS
 
 -- | A monad transformer for the pointed product,
 -- parameterized by:
@@ -75,36 +77,37 @@ instance (Semigroup a, Monad m) => Monad (CanT a m) where
       One a -> return $ One a
       Non -> return Non
 
-instance (Semigroup w, MonadWriter w m) => MonadWriter w (CanT w m) where
-  tell a = CanT $ Eno <$> tell a
+instance (Semigroup a, MonadWriter w m) => MonadWriter w (CanT a m) where
+  tell = lift . tell
 
   listen (CanT m) = CanT $ go <$> listen m where
     go (c,w) = case c of
       Non -> Non
-      One a -> One (w <> a)
+      One a -> One a
       Eno b -> Eno (b,w)
-      Two a b -> Two (w <> a) (b, w <> a)
+      Two a b -> Two a (b, w)
 
   pass (CanT m) = CanT $ pass (go <$> m) where -- collect $200.
     go = \case
       Non -> (Non, id)
-      One w -> (One w, (w <>))
+      One a -> (One a, id)
       Eno (a,f) -> (Eno a, f)
       Two w (a,f) -> (Two w a, f)
 
 
-instance (Semigroup r, MonadReader r m) => MonadReader r (CanT r m) where
-  ask = CanT (asks One)
+instance (Semigroup a, MonadReader r m) => MonadReader r (CanT a m) where
+  ask = lift ask
   local f (CanT m) = CanT (local f m)
 
-instance (MonadState s m, Semigroup s) => MonadState s (CanT s m) where
-  get = CanT $ gets Eno
-  put s = CanT $ Eno <$> put s
+instance (MonadState s m, Semigroup t) => MonadState s (CanT t m) where
+  get = lift get
+  put = lift . put
 
+instance (Semigroup t, MonadRWS r w s m) => MonadRWS r w s (CanT t m)
 
 instance MonadTrans (CanT a) where
   lift = CanT . fmap Eno
 
 instance (MonadError e m, Semigroup e) => MonadError e (CanT e m) where
-  throwError e = CanT $ One <$> throwError e
+  throwError = lift . throwError
   catchError (CanT m) f = CanT $ catchError m (runCanT . f)
