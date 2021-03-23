@@ -79,7 +79,7 @@ module Data.Can
 
 
 import Control.Applicative (Alternative(..), liftA2)
-import Control.DeepSeq (NFData(..))
+import Control.DeepSeq
 import Control.Monad.Zip
 import Control.Monad
 
@@ -93,6 +93,7 @@ import Data.Functor.Classes
 import Data.Foldable
 import Data.Functor.Identity
 import Data.Hashable
+import Data.Hashable.Lifted
 
 import GHC.Generics
 import GHC.Read
@@ -102,6 +103,7 @@ import qualified Language.Haskell.TH.Syntax as TH
 import Data.Smash.Internal
 
 import Text.Read hiding (get)
+
 
 
 
@@ -573,7 +575,10 @@ canUncurry k = \case
     Two a b -> k (Just a) (Just b)
 
 -- -------------------------------------------------------------------- --
--- Std instances
+-- Functor class instances
+
+instance Eq a => Eq1 (Can a) where
+  liftEq = liftEq2 (==)
 
 instance Eq2 Can where
   liftEq2 _ _ Non Non = True
@@ -581,6 +586,9 @@ instance Eq2 Can where
   liftEq2 _ g (Eno b) (Eno d) = g b d
   liftEq2 f g (Two a b) (Two c d) = f a c && g b d
   liftEq2 _ _ _ _ = False
+
+instance Ord a => Ord1 (Can a) where
+  liftCompare = liftCompare2 compare
 
 instance Ord2 Can where
   liftCompare2 _ _ Non Non = EQ
@@ -590,15 +598,21 @@ instance Ord2 Can where
   liftCompare2 _ g (Eno b) (Eno d) = g b d
   liftCompare2 f g (Two a b) (Two c d) = f a c <> g b d
   liftCompare2 _ _ One{} _ = LT
-  liftCompare2 _ _ Eno{} Two{} = LT
-  liftCompare2 _ _ Eno{} One{} = GT
+  liftCompare2 _ _ _ One{} = GT
+  liftCompare2 _ _ _ Two{} = LT
   liftCompare2 _ _ Two{} _ = GT
+
+instance Show a => Show1 (Can a) where
+  liftShowsPrec = liftShowsPrec2 showsPrec showList
 
 instance Show2 Can where
   liftShowsPrec2 _ _ _ _ _ Non = showString "Non"
   liftShowsPrec2 f _ _ _ d (One a) = showsUnaryWith f "One" d a
   liftShowsPrec2 _ _ g _ d (Eno b) = showsUnaryWith g "Eno" d b
   liftShowsPrec2 f _ g _ d (Two a b) = showsBinaryWith f g "Two" d a b
+
+instance Read a => Read1 (Can a) where
+  liftReadsPrec = liftReadsPrec2 readsPrec readList
 
 instance Read2 Can where
   liftReadPrec2 rpa _ rpb _ = nonP <|> oneP <|> enoP <|> twoP
@@ -607,6 +621,35 @@ instance Read2 Can where
       oneP = readData $ readUnaryWith rpa "One" One
       enoP = readData $ readUnaryWith rpb "Eno" Eno
       twoP = readData $ readBinaryWith rpa rpb "Two" Two
+
+instance NFData a => NFData1 (Can a) where
+  liftRnf = liftRnf2 rnf
+
+instance NFData2 Can where
+  liftRnf2 f g = \case
+    Non -> ()
+    One a -> f a
+    Eno b -> g b
+    Two a b -> f a `seq` g b
+
+instance Hashable a => Hashable1 (Can a) where
+  liftHashWithSalt = liftHashWithSalt2 hashWithSalt
+
+instance Hashable2 Can where
+  liftHashWithSalt2 f g salt = \case
+    Non -> salt `hashWithSalt` (0 :: Int) `hashWithSalt` ()
+    One a -> salt `hashWithSalt` (1 :: Int) `f` a
+    Eno b -> salt `hashWithSalt` (2 :: Int) `g` b
+    Two a b -> (salt `hashWithSalt` (3 :: Int) `f` a) `g` b
+
+-- -------------------------------------------------------------------- --
+-- Normal instances
+
+instance (NFData a, NFData b) => NFData (Can a b) where
+    rnf Non = ()
+    rnf (One a) = rnf a
+    rnf (Eno b) = rnf b
+    rnf (Two a b) = rnf a `seq` rnf b
 
 instance (Hashable a, Hashable b) => Hashable (Can a b)
 
@@ -671,12 +714,6 @@ instance (Semigroup a, Semigroup b) => Semigroup (Can a b) where
 instance (Semigroup a, Semigroup b) => Monoid (Can a b) where
   mempty = Non
   mappend = (<>)
-
-instance (NFData a, NFData b) => NFData (Can a b) where
-    rnf Non = ()
-    rnf (One a) = rnf a
-    rnf (Eno b) = rnf b
-    rnf (Two a b) = rnf a `seq` rnf b
 
 instance (Binary a, Binary b) => Binary (Can a b) where
   put Non = put @Int 0

@@ -69,7 +69,7 @@ module Data.Wedge
 
 
 import Control.Applicative (Alternative(..))
-import Control.DeepSeq (NFData(..))
+import Control.DeepSeq
 import Control.Monad.Zip
 
 import Data.Bifunctor
@@ -90,6 +90,7 @@ import Text.Read hiding (get)
 
 import Data.Smash.Internal
 import Control.Monad
+import Data.Hashable.Lifted
 
 
 {- $general
@@ -431,13 +432,19 @@ swapWedge :: Wedge a b -> Wedge b a
 swapWedge = wedge Nowhere There Here
 
 -- -------------------------------------------------------------------- --
--- Std instances
+-- Functor class instances
+
+instance Eq a => Eq1 (Wedge a) where
+  liftEq = liftEq2 (==)
 
 instance Eq2 Wedge where
   liftEq2 _ _ Nowhere Nowhere = True
   liftEq2 f _ (Here a) (Here c) = f a c
   liftEq2 _ g (There b) (There d) = g b d
   liftEq2 _ _ _ _ = False
+
+instance Ord a => Ord1 (Wedge a) where
+  liftCompare = liftCompare2 compare
 
 instance Ord2 Wedge where
   liftCompare2 _ _ Nowhere Nowhere = EQ
@@ -448,10 +455,16 @@ instance Ord2 Wedge where
   liftCompare2 _ _ There{} Here{} = GT
   liftCompare2 _ g (There b) (There d) = g b d
 
+instance Show a => Show1 (Wedge a) where
+  liftShowsPrec = liftShowsPrec2 showsPrec showList
+
 instance Show2 Wedge where
   liftShowsPrec2 _ _ _ _ _ Nowhere = showString "Nowhere"
   liftShowsPrec2 f _ _ _ d (Here a) = showsUnaryWith f "Here" d a
   liftShowsPrec2 _ _ g _ d (There b) = showsUnaryWith g "There" d b
+
+instance Read a => Read1 (Wedge a) where
+  liftReadsPrec = liftReadsPrec2 readsPrec readList
 
 instance Read2 Wedge where
   liftReadPrec2 rpa _ rpb _ = nowhereP <|> hereP <|> thereP
@@ -459,6 +472,27 @@ instance Read2 Wedge where
       nowhereP = Nowhere <$ expectP (Ident "Nowhere")
       hereP = readData $ readUnaryWith rpa "Here" Here
       thereP = readData $ readUnaryWith rpb "There" There
+
+instance Hashable a => Hashable1 (Wedge a) where
+  liftHashWithSalt = liftHashWithSalt2 hashWithSalt
+
+instance Hashable2 Wedge where
+  liftHashWithSalt2 f g salt = \case
+    Nowhere -> salt `hashWithSalt` (0 :: Int) `hashWithSalt` ()
+    Here a -> salt `hashWithSalt` (1 :: Int) `f` a
+    There b -> salt `hashWithSalt` (2 :: Int) `g` b
+
+instance NFData a => NFData1 (Wedge a) where
+  liftRnf = liftRnf2 rnf
+
+instance NFData2 Wedge where
+  liftRnf2 f g = \case
+    Nowhere -> ()
+    Here a -> f a
+    There b -> g b
+
+-- -------------------------------------------------------------------- --
+-- Std instances
 
 instance (Hashable a, Hashable b) => Hashable (Wedge a b)
 

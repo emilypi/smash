@@ -5,6 +5,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE Safe #-}
 -- |
@@ -20,7 +21,6 @@
 -- practice, this type is isomorphic to @'Maybe' (a,b)@ - the type with
 -- two possibly non-exclusive values and an empty case.
 --
-{-# LANGUAGE TypeOperators #-}
 module Data.Smash
 ( -- * Datatypes
   -- $general
@@ -74,7 +74,7 @@ module Data.Smash
 
 
 import Control.Applicative (Alternative(..))
-import Control.DeepSeq (NFData(..))
+import Control.DeepSeq
 import Control.Monad.Zip
 
 import Data.Biapplicative
@@ -96,6 +96,7 @@ import Text.Read hiding (get)
 import Data.Smash.Internal
 import qualified Language.Haskell.TH.Syntax as TH
 import Control.Monad
+import Data.Hashable.Lifted
 
 
 {- $general
@@ -457,7 +458,10 @@ swapSmash :: Smash a b -> Smash b a
 swapSmash = smash Nada (flip Smash)
 
 -- -------------------------------------------------------------------- --
--- Std instances
+-- Functor class instances
+
+instance Eq a => Eq1 (Smash a) where
+  liftEq = liftEq2 (==)
 
 instance Eq2 Smash where
   liftEq2 _ _ Nada Nada = True
@@ -465,21 +469,49 @@ instance Eq2 Smash where
   liftEq2 _ _ _ Nada = False
   liftEq2 f g (Smash a b) (Smash c d) = f a c && g b d
 
+instance Ord a => Ord1 (Smash a) where
+  liftCompare = liftCompare2 compare
+
 instance Ord2 Smash where
   liftCompare2 _ _ Nada Nada = EQ
   liftCompare2 _ _ Nada _ = LT
   liftCompare2 _ _ _ Nada = GT
   liftCompare2 f g (Smash a b) (Smash c d) = f a c <> g b d
 
+instance Show a => Show1 (Smash a) where
+  liftShowsPrec = liftShowsPrec2 showsPrec showList
+
 instance Show2 Smash where
   liftShowsPrec2 _ _ _ _ _ Nada = showString "Nada"
   liftShowsPrec2 f _ g _ d (Smash a b) = showsBinaryWith f g "Smash" d a b
+
+instance Read a => Read1 (Smash a) where
+  liftReadsPrec = liftReadsPrec2 readsPrec readList
 
 instance Read2 Smash where
   liftReadPrec2 rpa _ rpb _ = nadaP <|> smashP
     where
       nadaP = Nada <$ expectP (Ident "Nada")
       smashP = readData $ readBinaryWith rpa rpb "Smash" Smash
+
+instance NFData a => NFData1 (Smash a) where
+  liftRnf = liftRnf2 rnf
+
+instance NFData2 Smash where
+  liftRnf2 f g = \case
+    Nada -> ()
+    Smash a b -> f a `seq` g b
+
+instance Hashable a => Hashable1 (Smash a) where
+  liftHashWithSalt = liftHashWithSalt2 hashWithSalt
+
+instance Hashable2 Smash where
+  liftHashWithSalt2 f g salt = \case
+    Nada -> salt `hashWithSalt` (0 :: Int) `hashWithSalt` ()
+    Smash a b -> (salt `hashWithSalt` (1 :: Int) `f` a) `g` b
+
+-- -------------------------------------------------------------------- --
+-- Std instances
 
 instance (Hashable a, Hashable b) => Hashable (Smash a b)
 
