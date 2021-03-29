@@ -365,8 +365,8 @@ accumUntilM f = go mempty
 -- their parts.
 --
 partitionWedges
-    :: Foldable t
-    => Alternative f
+    :: Alternative f
+    => Foldable t
     => t (Wedge a b) -> (f a, f b)
 partitionWedges = foldr go (empty, empty)
   where
