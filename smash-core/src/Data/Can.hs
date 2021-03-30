@@ -469,8 +469,8 @@ partitionEithers = go . E.partitionEithers . toList
 -- their parts.
 --
 partitionCans
-    :: Foldable t
-    => Alternative f
+    :: Alternative f
+    => Foldable t
     => t (Can a b)
     -> (f a, f b)
 partitionCans = foldr go (empty, empty)

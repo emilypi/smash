@@ -348,8 +348,8 @@ accumUntilM f = go mempty
 -- their parts.
 --
 partitionSmashes
-    :: Foldable t
-    => Alternative f
+    :: Alternative f
+    => Foldable t
     => t (Smash a b) -> (f a, f b)
 partitionSmashes = foldr go (empty, empty)
   where
