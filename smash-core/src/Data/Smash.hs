@@ -55,6 +55,7 @@ module Data.Smash
   -- * Partitioning
 , partitionSmashes
 , mapSmashes
+, eqSmash
   -- * Currying & Uncurrying
 , smashCurry
 , smashUncurry
@@ -84,6 +85,7 @@ import Data.Bitraversable
 import Data.Can (Can(..), can)
 import Data.Data
 import Data.Functor.Classes
+import Data.Functor.Contravariant (Equivalence(..))
 import Data.Functor.Identity
 import Data.Hashable
 import Data.Wedge (Wedge(..))
@@ -366,6 +368,16 @@ mapSmashes
     -> t a
     -> (f b, f c)
 mapSmashes f = partitionSmashes . fmap f
+
+-- | Equivalence relation formed by grouping of equal 'Smash' constructors.
+--
+eqSmash :: Equivalence (Smash a b)
+eqSmash = Equivalence equivalence
+  where
+    equivalence :: Smash a b -> Smash a b -> Bool
+    equivalence Nada        Nada        = True
+    equivalence (Smash _ _) (Smash _ _) = True
+    equivalence _           _           = False
 
 -- -------------------------------------------------------------------- --
 -- Currying & Uncurrying

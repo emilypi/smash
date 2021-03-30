@@ -57,6 +57,7 @@ module Data.Wedge
   -- ** Partitioning
 , partitionWedges
 , mapWedges
+, eqWedge
   -- ** Distributivity
 , distributeWedge
 , codistributeWedge
@@ -78,6 +79,7 @@ import Data.Binary (Binary(..))
 import Data.Bitraversable
 import Data.Data
 import Data.Functor.Classes
+import Data.Functor.Contravariant (Equivalence(..))
 import Data.Functor.Identity
 import Data.Hashable
 
@@ -384,6 +386,17 @@ mapWedges
     -> t a
     -> (f b, f c)
 mapWedges f = partitionWedges . fmap f
+
+-- | Equivalence relation formed by grouping of equal 'Wedge' constructors.
+--
+eqWedge :: Equivalence (Wedge a b)
+eqWedge = Equivalence equivalence
+  where
+    equivalence :: Wedge a b -> Wedge a b -> Bool
+    equivalence Nowhere   Nowhere   = True
+    equivalence (Here  _) (Here  _) = True
+    equivalence (There _) (There _) = True
+    equivalence _         _         = False
 
 -- -------------------------------------------------------------------- --
 -- Associativity

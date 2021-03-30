@@ -67,6 +67,7 @@ module Data.Can
 , partitionAll
 , partitionEithers
 , mapCans
+, eqCan
   -- * Distributivity
 , distributeCan
 , codistributeCan
@@ -90,6 +91,7 @@ import Data.Bitraversable
 import Data.Data
 import qualified Data.Either as E
 import Data.Functor.Classes
+import Data.Functor.Contravariant (Equivalence(..))
 import Data.Foldable
 import Data.Functor.Identity
 import Data.Hashable
@@ -490,6 +492,18 @@ mapCans
     -> t a
     -> (f b, f c)
 mapCans f = partitionCans . fmap f
+
+-- | Equivalence relation formed by grouping of equal 'Can' constructors.
+--
+eqCan :: Equivalence (Can a b)
+eqCan = Equivalence equivalence
+  where
+    equivalence :: Can a b -> Can a b -> Bool
+    equivalence Non       Non       = True
+    equivalence (One   _) (One   _) = True
+    equivalence (Eno   _) (Eno   _) = True
+    equivalence (Two _ _) (Two _ _) = True
+    equivalence _         _         = False
 
 -- -------------------------------------------------------------------- --
 -- Distributivity
