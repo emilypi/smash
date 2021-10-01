@@ -525,7 +525,7 @@ instance Traversable (Wedge a) where
     Here a -> pure (Here a)
     There b -> There <$> f b
 
-instance Semigroup a => Applicative (Wedge a) where
+instance Applicative (Wedge a) where
   pure = There
 
   _ <*> Nowhere = Nowhere
@@ -534,7 +534,7 @@ instance Semigroup a => Applicative (Wedge a) where
   There _ <*> Here b = Here b
   There f <*> There a = There (f a)
 
-instance Semigroup a => Monad (Wedge a) where
+instance Monad (Wedge a) where
   return = pure
   (>>) = (*>)
 
