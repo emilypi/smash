@@ -1,6 +1,6 @@
 cabal-version:   2.0
 name:            smash-optics
-version:         0.1.0.1
+version:         0.1.0.2
 synopsis:        Optics for the `smash` library using `optics-core`
 description:
   Prisms, Traversals, and `optics` combinators for the `smash` library.
@@ -35,9 +35,9 @@ library
     Data.Wedge.Optics
 
   build-depends:
-      base         >=4.11 && <4.16
-    , optics-core  ^>=0.3
-    , smash        ^>=0.1
+      base         >=4.11 && <4.17
+    , optics-core  >=0.3 && <0.5
+    , smash        >=0.1.3
 
   hs-source-dirs:   src
   default-language: Haskell2010

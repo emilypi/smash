@@ -1,5 +1,9 @@
 # Revision history for possibly-can
 
+## 0.1.3 -- 2022-04-03
+
+* Update `base` bounds to allow GHC 9.2.1
+
 ## 0.1.2
 
 * Add Monad Transformers for `Can`, `Wedge`, and `Smash` ([#25](https://github.com/emilypi/smash/pull/25))
