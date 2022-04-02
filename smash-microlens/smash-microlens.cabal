@@ -36,7 +36,7 @@ library
   -- other-extensions:
   build-depends:
       base       >=4.11 && <4.16
-    , microlens  >=0.3  && <0.4.12
+    , microlens  >=0.3  && <0.5
     , smash      ^>=0.1
 
   hs-source-dirs:   src

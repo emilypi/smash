@@ -1,6 +1,6 @@
 cabal-version:      2.0
 name:               smash-aeson
-version:            0.1.0.0
+version:            0.2.0.0
 synopsis:           Aeson support for the smash library
 description:        Aeson support for the `smash` library
 homepage:           https://github.com/emilypi/smash
@@ -29,7 +29,7 @@ library
     Data.Wedge.Aeson
 
   build-depends:
-      aeson                 >=1.4   && <1.6
+      aeson                 >=2.0   && <2.1
     , base                  >=4.1  && <4.16
     , smash                 ^>=0.1.1
     , unordered-containers
