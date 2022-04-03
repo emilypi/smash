@@ -2,7 +2,7 @@
 
 ## 0.1.0.3 -- 2022-04-03
 
-* Update `base` bounds to allow GHC 9.2.1
+* Update `base` bounds to allow GHC 9.2.x
 
 ## 0.1.0.2 -- 2022-04-02
 
