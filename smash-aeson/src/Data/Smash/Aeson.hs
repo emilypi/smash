@@ -18,7 +18,7 @@ module Data.Smash.Aeson where
 
 import Data.Aeson
 import Data.Aeson.Encoding (emptyObject_, pair)
-import qualified Data.HashMap.Lazy as HM
+import qualified Data.Aeson.KeyMap as KM
 #if __GLASGOW_HASKELL__ < 804
 import Data.Semigroup (Semigroup(..))
 #endif
@@ -33,7 +33,7 @@ instance (ToJSON a, ToJSON b) => ToJSON (Smash a b) where
     toEncoding Nada = emptyObject_
 
 instance (FromJSON a, FromJSON b) => FromJSON (Smash a b) where
-    parseJSON = withObject "Smash a b" (go . HM.toList)
+    parseJSON = withObject "Smash a b" (go . KM.toList)
       where
         go [("SmashL", a), ("SmashR", b)] = Smash <$> parseJSON a <*> parseJSON b
         go [] = pure Nada
@@ -56,14 +56,14 @@ instance ToJSON a => ToJSON1 (Smash a) where
     liftToEncoding _ _ Nada = emptyObject_
 
 instance FromJSON2 Smash where
-    liftParseJSON2 f _ g _ = withObject "Smash a b" (go . HM.toList)
+    liftParseJSON2 f _ g _ = withObject "Smash a b" (go . KM.toList)
       where
         go [] = pure Nada
         go [("SmashL", a), ("SmashR", b)] = Smash <$> f a <*> g b
         go _ = fail "Expected either empty object, or a 'Smash' pair"
 
 instance FromJSON a => FromJSON1 (Smash a) where
-    liftParseJSON f _ = withObject "Smash a b" (go . HM.toList)
+    liftParseJSON f _ = withObject "Smash a b" (go . KM.toList)
       where
         go [] = pure Nada
         go [("SmashL", a), ("SmashR", b)] = Smash <$> parseJSON a <*> f b

@@ -16,7 +16,7 @@ module Data.Wedge.Aeson where
 
 import Data.Aeson
 import Data.Aeson.Encoding (emptyObject_, pair)
-import qualified Data.HashMap.Lazy as HM
+import qualified Data.Aeson.KeyMap as KM
 import Data.Wedge (Wedge(..))
 
 
@@ -30,7 +30,7 @@ instance (ToJSON a, ToJSON b) => ToJSON (Wedge a b) where
     toEncoding Nowhere = emptyObject_
 
 instance (FromJSON a, FromJSON b) => FromJSON (Wedge a b) where
-    parseJSON = withObject "Wedge a b" (go . HM.toList)
+    parseJSON = withObject "Wedge a b" (go . KM.toList)
       where
         go [("Here", a)] = Here <$> parseJSON a
         go [("There", b)] = There <$> parseJSON b
@@ -58,7 +58,7 @@ instance ToJSON a => ToJSON1 (Wedge a) where
     liftToEncoding _ _ Nowhere = emptyObject_
 
 instance FromJSON2 Wedge where
-    liftParseJSON2 f _ g _ = withObject "Wedge a b" (go . HM.toList)
+    liftParseJSON2 f _ g _ = withObject "Wedge a b" (go . KM.toList)
       where
         go [] = pure Nowhere
         go [("Here", a)] = Here <$> f a
@@ -66,7 +66,7 @@ instance FromJSON2 Wedge where
         go _  = fail "Expected either empty object, or one with 'Here' or 'There' keys only"
 
 instance FromJSON a => FromJSON1 (Wedge a) where
-    liftParseJSON f _ = withObject "Wedge a b" (go . HM.toList)
+    liftParseJSON f _ = withObject "Wedge a b" (go . KM.toList)
       where
         go [] = pure Nowhere
         go [("Here", a)] = Here <$> parseJSON a

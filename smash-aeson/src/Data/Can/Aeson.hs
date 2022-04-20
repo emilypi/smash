@@ -17,7 +17,7 @@ module Data.Can.Aeson where
 
 import Data.Aeson
 import Data.Aeson.Encoding (emptyObject_, pair)
-import qualified Data.HashMap.Lazy as HM
+import qualified Data.Aeson.KeyMap as KM
 import Data.Can (Can(..))
 #if __GLASGOW_HASKELL__ < 804
 import Data.Semigroup (Semigroup(..))
@@ -36,7 +36,7 @@ instance (ToJSON a, ToJSON b) => ToJSON (Can a b) where
     toEncoding Non = emptyObject_
 
 instance (FromJSON a, FromJSON b) => FromJSON (Can a b) where
-    parseJSON = withObject "Can a b" (go . HM.toList)
+    parseJSON = withObject "Can a b" (go . KM.toList)
       where
         go [("One", a)] = One <$> parseJSON a
         go [("Eno", b)] = Eno <$> parseJSON b
@@ -69,7 +69,7 @@ instance ToJSON a => ToJSON1 (Can a) where
     liftToEncoding _ _ Non = emptyObject_
 
 instance FromJSON2 Can where
-    liftParseJSON2 f _ g _ = withObject "Can a b" (go . HM.toList)
+    liftParseJSON2 f _ g _ = withObject "Can a b" (go . KM.toList)
       where
         go [] = pure Non
         go [("One", a)] = One <$> f a
@@ -78,7 +78,7 @@ instance FromJSON2 Can where
         go _  = fail "Expected either empty object, or 'One' and 'Eno' keys, 'One' or 'Eno' keys only"
 
 instance FromJSON a => FromJSON1 (Can a) where
-    liftParseJSON f _ = withObject "Can a b" (go . HM.toList)
+    liftParseJSON f _ = withObject "Can a b" (go . KM.toList)
       where
         go [] = pure Non
         go [("One", a)] = One <$> parseJSON a
