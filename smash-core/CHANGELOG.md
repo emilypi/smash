@@ -1,4 +1,4 @@
-# Revision history for possibly-can
+# Revision history for smash
 
 ## 0.1.3 -- 2022-04-03
 
