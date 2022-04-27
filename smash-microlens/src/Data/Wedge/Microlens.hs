@@ -6,7 +6,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Module       : Data.Wedge.Microlens
--- Copyright 	: (c) 2020-2021 Emily Pillmore
+-- Copyright 	: (c) 2020-2022 Emily Pillmore
 -- License	: BSD-style
 --
 -- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>

@@ -8,7 +8,7 @@
 {-# language Safe #-}
 -- |
 -- Module       : Control.Monad.Trans.Wedge
--- Copyright    : (c) 2020-2021 Emily Pillmore
+-- Copyright    : (c) 2020-2022 Emily Pillmore
 -- License      : BSD-3-Clause
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -20,7 +20,7 @@
 --
 module Control.Monad.Trans.Wedge
 ( -- * Monad transformer
-  WedgeT(runWedgeT)
+  WedgeT(..)
   -- ** Combinators
 , mapWedgeT
 ) where

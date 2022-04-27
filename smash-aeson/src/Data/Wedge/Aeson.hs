@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Module       : Data.Wedge.Aeson
--- Copyright    : (c) 2020 Emily Pillmore
+-- Copyright    : (c) 2020-2022 Emily Pillmore
 -- License      : BSD-3-Clause
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
