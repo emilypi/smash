@@ -105,7 +105,7 @@ instance (MonadState s m, Semigroup t) => MonadState s (CanT t m) where
 
 instance (Semigroup t, MonadRWS r w s m) => MonadRWS r w s (CanT t m)
 
-instance MonadTrans (CanT a) where
+instance (Semigroup t) => MonadTrans (CanT t) where
   lift = CanT . fmap Eno
 
 instance (MonadError e m, Semigroup e) => MonadError e (CanT e m) where

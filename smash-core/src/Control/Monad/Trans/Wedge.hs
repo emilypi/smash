@@ -97,7 +97,7 @@ instance (MonadState s m, Semigroup t) => MonadState s (WedgeT t m) where
 
 instance (Semigroup t, MonadRWS r w s m) => MonadRWS r w s (WedgeT t m)
 
-instance MonadTrans (WedgeT a) where
+instance (Semigroup t) => MonadTrans (WedgeT t) where
   lift = WedgeT . fmap There
 
 instance (MonadError e m, Semigroup e) => MonadError e (WedgeT e m) where
