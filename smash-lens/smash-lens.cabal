@@ -11,7 +11,7 @@ license:            BSD3
 license-file:       LICENSE
 author:             Emily Pillmore
 maintainer:         emilypi@cohomolo.gy
-copyright:          (c) 2020-2022 Emily Pillmore <emilypi@cohomolo.gy>
+copyright:          (c) 2020-2026 Emily Pillmore <emilypi@cohomolo.gy>
 category:           Data
 build-type:         Simple
 extra-source-files:
@@ -19,11 +19,11 @@ extra-source-files:
   README.md
 
 tested-with:
-  GHC ==8.6.5
-   || ==8.8.4
-   || ==8.10.7
-   || ==9.0.2
-   || ==9.2.2
+  GHC ==9.6.6
+   || ==9.8.2
+   || ==9.10.3
+   || ==9.12.2
+   || ==9.14.1
 
 source-repository head
   type:     git
@@ -38,8 +38,8 @@ library
   -- other-modules:
   -- other-extensions:
   build-depends:
-      base   >=4.11 && <4.17
-    , lens   >=4.0  && <5.2
+      base   >=4.15 && <4.23
+    , lens   >=4.0  && <5.4
     , smash  >=0.1.3
 
   hs-source-dirs:   src
@@ -51,4 +51,4 @@ test-suite smash-lens-test
   type:             exitcode-stdio-1.0
   hs-source-dirs:   test
   main-is:          MyLibTest.hs
-  build-depends:    base >=4.10 && <5.0
+  build-depends:    base >=4.14 && <5.0

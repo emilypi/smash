@@ -8,7 +8,7 @@
 {-# language Safe #-}
 -- |
 -- Module       : Control.Monad.Trans.Smash
--- Copyright    : (c) 2020-2022 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-3-Clause
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -28,7 +28,6 @@ module Control.Monad.Trans.Smash
 
 import Data.Smash
 
-import Control.Applicative (liftA2)
 import Control.Monad.Writer
 import Control.Monad.Reader
 import Control.Monad.State

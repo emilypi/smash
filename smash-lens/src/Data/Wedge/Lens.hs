@@ -4,10 +4,12 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeOperators #-}
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Module       : Data.Wedge.Lens
--- Copyright 	: (c) 2020-2022 Emily Pillmore
+-- Copyright 	: (c) 2020-2026 Emily Pillmore
 -- License	: BSD-style
 --
 -- Maintainer	: Emily Pillmore <emilypi@cohomolo.gy>
