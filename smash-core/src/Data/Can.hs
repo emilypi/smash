@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
@@ -79,7 +80,10 @@ module Data.Can
 ) where
 
 
-import Control.Applicative (Alternative(..), liftA2)
+import Control.Applicative (Alternative(..))
+#if !MIN_VERSION_base(4,18,0)
+import Control.Applicative (liftA2)
+#endif
 import Control.DeepSeq
 import Control.Monad.Zip
 import Control.Monad
@@ -147,7 +151,7 @@ data Can a b = Non | One a | Eno b | Two a b
   deriving
     ( Eq, Ord, Read, Show
     , Generic, Generic1
-    , Typeable, Data
+    , Data
     , TH.Lift
     )
 

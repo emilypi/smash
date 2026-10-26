@@ -3,7 +3,11 @@ on:
   push:
     branches:
       - master
-  pull_request: {} # Validate all PRs
+  pull_request: {}
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 defaults:
   run:
@@ -13,54 +17,95 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        ghc: ['9.6', '9.8', '9.10', '9.12', '9.14']
+        ghc: ['9.6.7', '9.8.4', '9.10.3', '9.12.4', '9.14.1']
         include:
-        - os: macOS-latest
-          ghc: 'latest'
+          - os: macos-15
+            ghc: '9.14.1'
     steps:
-    - uses: actions/checkout@v3
-    - uses: haskell/actions/setup@v2
-      id: setup-haskell-cabal
-      with:
-        ghc-version: ${{ matrix.ghc }}
-    - name: Update cabal package database
-      run: cabal update
-    - uses: actions/cache@v3
-      name: Cache cabal stuff
-      with:
-        path: |
-          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          dist-newstyle
-        key: ${{ runner.os }}-${{ matrix.ghc }}
-    - name: Haddock
-      run: |
-        cd smash-*/
-        cabal haddock all
-    - name: Cabal check
-      run: |
-        cd smash-*/
-        cabal check
+      - uses: actions/checkout@v7
+      - uses: haskell-actions/setup@v2.12.1
+        id: setup
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: 'latest'
+      - run: cabal update
+      - uses: actions/cache@v6
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ runner.os }}-${{ runner.arch }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}-${{ hashFiles('**/*.cabal', 'cabal.project') }}
+      - name: Build source distributions
+        run: |
+          cabal sdist all --output-directory=sdist
+          mkdir unpacked
+          for archive in sdist/*.tar.gz; do
+            tar -xzf "$archive" -C unpacked
+          done
+          cat > unpacked/cabal.project <<'PROJECT'
+          packages: */*.cabal
+          tests: True
+          PROJECT
+      - name: Build and test release archives
+        working-directory: unpacked
+        run: |
+          cabal build all --enable-tests
+          cabal test all --test-show-details=direct
+      - name: Haddock
+        working-directory: unpacked
+        run: cabal haddock all
+      - name: Check release packages
+        working-directory: unpacked
+        run: |
+          for package in */*.cabal; do
+            (cd "$(dirname "$package")" && cabal check)
+          done
+
+  aeson-compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # These versions exercise both sides of the aeson 2.2 lifted API change.
+        include:
+          - aeson: '2.0.3.0'
+            ghc: '9.2.8'
+          - aeson: '2.1.2.1'
+            ghc: '9.6.7'
+          - aeson: '2.2.3.0'
+            ghc: '9.6.7'
+          - aeson: '2.3.2.0'
+            ghc: '9.6.7'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: haskell-actions/setup@v2.12.1
+        id: setup
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: 'latest'
+      - run: cabal update
+      - uses: actions/cache@v6
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ runner.os }}-${{ runner.arch }}-aeson-${{ matrix.aeson }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}-${{ hashFiles('**/*.cabal', 'cabal.project') }}
+      - name: Test JSON compatibility
+        run: cabal test smash-aeson --constraint='aeson == ${{ matrix.aeson }}' --test-show-details=direct
 
   bounds-checking:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: haskell/actions/setup@v2
-      id: setup-haskell-cabal
-      with:
-        ghc-version: 'latest'
-    - name: Update cabal package database
-      run: cabal update
-    - uses: actions/cache@v3
-      name: Cache cabal stuff
-      with:
-        path: |
-          ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          dist-newstyle
-        key: ${{ runner.os }}-latest
-    - name: Test
-      run: cabal test --ghc-options='-fcheck-prim-bounds -fno-ignore-asserts'
+      - uses: actions/checkout@v7
+      - uses: haskell-actions/setup@v2.12.1
+        id: setup
+        with:
+          ghc-version: '9.14.1'
+          cabal-version: 'latest'
+      - run: cabal update
+      - uses: actions/cache@v6
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ runner.os }}-${{ runner.arch }}-bounds-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}-${{ hashFiles('**/*.cabal', 'cabal.project') }}
+      - name: Test with runtime checks
+        run: cabal test all --test-show-details=direct --ghc-options='-fcheck-prim-bounds -fno-ignore-asserts'

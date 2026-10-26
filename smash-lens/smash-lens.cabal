@@ -1,6 +1,6 @@
 cabal-version:      2.0
 name:               smash-lens
-version:            0.1.0.3
+version:            0.1.0.4
 synopsis:           Optics for the `smash` library
 description:
   Prisms, Traversals, and combinators for the `smash` library.
@@ -14,15 +14,15 @@ maintainer:         emilypi@cohomolo.gy
 copyright:          (c) 2020-2026 Emily Pillmore <emilypi@cohomolo.gy>
 category:           Data
 build-type:         Simple
-extra-source-files:
+extra-doc-files:
   CHANGELOG.md
   README.md
 
 tested-with:
-  GHC ==9.6.6
-   || ==9.8.2
+  GHC ==9.6.7
+   || ==9.8.4
    || ==9.10.3
-   || ==9.12.2
+   || ==9.12.4
    || ==9.14.1
 
 source-repository head
@@ -35,20 +35,29 @@ library
     Data.Smash.Lens
     Data.Wedge.Lens
 
-  -- other-modules:
-  -- other-extensions:
   build-depends:
-      base   >=4.15 && <4.23
-    , lens   >=4.0  && <5.4
-    , smash  >=0.1.3
+      base              >=4.15 && <4.23
+    , lens              >=4.0  && <5.4
+    , smash             >=0.1.4 && <0.2
 
   hs-source-dirs:   src
   default-language: Haskell2010
   ghc-options:      -Wall
 
-test-suite smash-lens-test
+
+test-suite smash-lens-tests
   default-language: Haskell2010
   type:             exitcode-stdio-1.0
-  hs-source-dirs:   test
-  main-is:          MyLibTest.hs
-  build-depends:    base >=4.14 && <5.0
+  hs-source-dirs:    test
+  main-is:          Main.hs
+  build-depends:
+      base              >=4.15 && <4.23
+    , smash-lens
+    , tasty             >=1.4 && <1.6
+    , tasty-hunit       >=0.10 && <0.11
+    , tasty-quickcheck  >=0.10 && <0.12
+    , QuickCheck        >=2.14 && <2.17
+    , smash
+    , lens
+
+  ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N

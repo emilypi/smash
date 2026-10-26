@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -28,6 +29,9 @@ module Control.Monad.Trans.Wedge
 
 import Data.Wedge 
  
+#if !MIN_VERSION_base(4,18,0)
+import Control.Applicative (liftA2)
+#endif
 import Control.Monad.Writer
 import Control.Monad.Reader
 import Control.Monad.State.Class

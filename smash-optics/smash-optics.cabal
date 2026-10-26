@@ -1,6 +1,6 @@
 cabal-version:   2.0
 name:            smash-optics
-version:         0.1.0.2
+version:         0.1.0.3
 synopsis:        Optics for the `smash` library using `optics-core`
 description:
   Prisms, Traversals, and `optics` combinators for the `smash` library.
@@ -19,10 +19,10 @@ extra-doc-files:
   README.md
 
 tested-with:
-  GHC ==9.6.6
-   || ==9.8.2
+  GHC ==9.6.7
+   || ==9.8.4
    || ==9.10.3
-   || ==9.12.2
+   || ==9.12.4
    || ==9.14.1
 
 source-repository head
@@ -36,9 +36,26 @@ library
     Data.Wedge.Optics
 
   build-depends:
-      base         >=4.15 && <4.23
-    , optics-core  >=0.3 && <0.5
-    , smash        >=0.1.3
+      base              >=4.15 && <4.23
+    , optics-core       >=0.3 && <0.5
+    , smash             >=0.1.4 && <0.2
 
   hs-source-dirs:   src
   default-language: Haskell2010
+
+test-suite smash-optics-tests
+  default-language: Haskell2010
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:    test
+  main-is:          Main.hs
+  build-depends:
+      base              >=4.15 && <4.23
+    , smash-optics
+    , tasty             >=1.4 && <1.6
+    , tasty-hunit       >=0.10 && <0.11
+    , tasty-quickcheck  >=0.10 && <0.12
+    , QuickCheck        >=2.14 && <2.17
+    , smash
+    , optics-core
+
+  ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N

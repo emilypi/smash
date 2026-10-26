@@ -1,5 +1,12 @@
 # Revision history for smash
 
+## 0.1.4 -- 2026-10-26
+
+* Update dependency bounds and the supported GHC matrix to 9.6–9.14.
+* Update copyrights through 2026.
+* Expose `Data.Smash.Internal` alongside the other library modules.
+* Add Tasty unit and property tests for data types, instances, and transformers.
+
 ## 0.1.3 -- 2022-04-03
 
 * Update `base` bounds to allow GHC 9.2.x
