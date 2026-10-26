@@ -1,8 +1,9 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- |
 -- Module       : Data.Wedge.Aeson
--- Copyright    : (c) 2020-2022 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-3-Clause
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -11,7 +12,7 @@
 --
 -- This module contains the Aeson instances for the 'Wedge' datatype.
 --
-module Data.Wedge.Aeson where
+module Data.Wedge.Aeson () where
 
 
 import Data.Aeson
@@ -30,7 +31,7 @@ instance (ToJSON a, ToJSON b) => ToJSON (Wedge a b) where
     toEncoding Nowhere = emptyObject_
 
 instance (FromJSON a, FromJSON b) => FromJSON (Wedge a b) where
-    parseJSON = withObject "Wedge a b" (go . KM.toList)
+    parseJSON = withObject "Wedge a b" (go . KM.toAscList)
       where
         go [("Here", a)] = Here <$> parseJSON a
         go [("There", b)] = There <$> parseJSON b
@@ -39,26 +40,54 @@ instance (FromJSON a, FromJSON b) => FromJSON (Wedge a b) where
 
 
 instance ToJSON2 Wedge where
+#if MIN_VERSION_aeson(2,2,0)
+    liftToJSON2 _ f _ _ _ _ (Here a) = object [ "Here" .= f a ]
+    liftToJSON2 _ _ _ _ g _ (There b) = object [ "There" .= g b ]
+    liftToJSON2 _ _ _ _ _ _ Nowhere = object []
+#else
     liftToJSON2 f _ _ _ (Here a) = object [ "Here" .= f a ]
     liftToJSON2 _ _ g _ (There b) = object [ "There" .= g b ]
     liftToJSON2 _ _ _ _ Nowhere = object []
+#endif
 
+#if MIN_VERSION_aeson(2,2,0)
+    liftToEncoding2 _ f _ _ _ _ (Here a) = pairs $ pair "Here" (f a)
+    liftToEncoding2 _ _ _ _ g _ (There b) = pairs $ pair "There" (g b)
+    liftToEncoding2 _ _ _ _ _ _ Nowhere = emptyObject_
+#else
     liftToEncoding2 f _ _ _ (Here a) = pairs $ pair "Here" (f a)
     liftToEncoding2 _ _ g _ (There b) = pairs $ pair "There" (g b)
     liftToEncoding2 _ _ _ _ Nowhere = emptyObject_
+#endif
 
 
 instance ToJSON a => ToJSON1 (Wedge a) where
+#if MIN_VERSION_aeson(2,2,0)
+    liftToJSON _ _ _ (Here a) = object [ "Here" .= a ]
+    liftToJSON _ g _ (There b) = object [ "There" .= g b ]
+    liftToJSON _ _ _ Nowhere = object []
+#else
     liftToJSON _ _ (Here a) = object [ "Here" .= a ]
     liftToJSON g _ (There b) = object [ "There" .= g b ]
     liftToJSON _ _ Nowhere = object []
+#endif
 
+#if MIN_VERSION_aeson(2,2,0)
+    liftToEncoding _ _ _ (Here a) = pairs $ "Here" .= a
+    liftToEncoding _ g _ (There b) = pairs $ pair "There" (g b)
+    liftToEncoding _ _ _ Nowhere = emptyObject_
+#else
     liftToEncoding _ _ (Here a) = pairs $ "Here" .= a
     liftToEncoding g _ (There b) = pairs $ pair "There" (g b)
     liftToEncoding _ _ Nowhere = emptyObject_
+#endif
 
 instance FromJSON2 Wedge where
-    liftParseJSON2 f _ g _ = withObject "Wedge a b" (go . KM.toList)
+#if MIN_VERSION_aeson(2,2,0)
+    liftParseJSON2 _ f _ _ g _ = withObject "Wedge a b" (go . KM.toAscList)
+#else
+    liftParseJSON2 f _ g _ = withObject "Wedge a b" (go . KM.toAscList)
+#endif
       where
         go [] = pure Nowhere
         go [("Here", a)] = Here <$> f a
@@ -66,7 +95,11 @@ instance FromJSON2 Wedge where
         go _  = fail "Expected either empty object, or one with 'Here' or 'There' keys only"
 
 instance FromJSON a => FromJSON1 (Wedge a) where
-    liftParseJSON f _ = withObject "Wedge a b" (go . KM.toList)
+#if MIN_VERSION_aeson(2,2,0)
+    liftParseJSON _ f _ = withObject "Wedge a b" (go . KM.toAscList)
+#else
+    liftParseJSON f _ = withObject "Wedge a b" (go . KM.toAscList)
+#endif
       where
         go [] = pure Nowhere
         go [("Here", a)] = Here <$> parseJSON a

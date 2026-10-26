@@ -1,7 +1,7 @@
 # smash-lens: Optics for the smash library
 
 
-[![Build Status](https://travis-ci.com/emilypi/smash.svg?branch=master)](https://travis-ci.com/emilypi/smash)
+[![CI](https://github.com/emilypi/smash/actions/workflows/haskell-ci.yml/badge.svg)](https://github.com/emilypi/smash/actions/workflows/haskell-ci.yml)
 [![Hackage](https://img.shields.io/hackage/v/smash-lens.svg)](https://hackage.haskell.org/package/smash-lens)
 
 

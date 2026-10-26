@@ -16,3 +16,18 @@ This repository is the toplevel for the following projects:
 - [smash-lens](https://hackage.haskell.org/package/smash-lens)
 - [smash-optics](https://hackage.haskell.org/package/smash-optics)
 
+
+## Development
+
+The supported compiler matrix is GHC 9.6–9.14. Each package has a Tasty suite
+combining HUnit regression cases and QuickCheck properties.
+
+```sh
+cabal build all --enable-tests
+cabal test all --test-show-details=direct
+cabal haddock all
+cabal sdist all
+```
+
+CI also builds and tests the source distributions and checks the JSON instances
+against `aeson` 2.0, 2.1, 2.2, and 2.3 to preserve the documented wire formats.

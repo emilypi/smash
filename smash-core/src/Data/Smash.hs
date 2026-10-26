@@ -10,7 +10,7 @@
 {-# LANGUAGE Safe #-}
 -- |
 -- Module       : Data.Smash
--- Copyright    : (c) 2020-2022 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-3-Clause
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -156,7 +156,7 @@ data Smash a b = Nada | Smash a b
   deriving
     ( Eq, Ord, Read, Show
     , Generic, Generic1
-    , Typeable, Data
+    , Data
     , TH.Lift
     )
 

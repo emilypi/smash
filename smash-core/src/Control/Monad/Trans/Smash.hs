@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -8,7 +9,7 @@
 {-# language Safe #-}
 -- |
 -- Module       : Control.Monad.Trans.Smash
--- Copyright    : (c) 2020-2022 Emily Pillmore
+-- Copyright    : (c) 2020-2026 Emily Pillmore
 -- License      : BSD-3-Clause
 --
 -- Maintainer   : Emily Pillmore <emilypi@cohomolo.gy>
@@ -28,7 +29,9 @@ module Control.Monad.Trans.Smash
 
 import Data.Smash
 
+#if !MIN_VERSION_base(4,18,0)
 import Control.Applicative (liftA2)
+#endif
 import Control.Monad.Writer
 import Control.Monad.Reader
 import Control.Monad.State
