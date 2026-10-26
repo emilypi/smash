@@ -38,8 +38,8 @@ library
   -- other-modules:
   -- other-extensions:
   build-depends:
-      base   >=4.11 && <4.17
-    , lens   >=4.0  && <5.2
+      base   >=4.11
+    , lens   >=4.0
     , smash  >=0.1.3
 
   hs-source-dirs:   src
