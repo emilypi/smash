@@ -1,6 +1,6 @@
 cabal-version:      2.0
 name:               smash-lens
-version:            0.1.0.4
+version:            0.2.0
 synopsis:           Optics for the `smash` library
 description:
   Prisms, Traversals, and combinators for the `smash` library.
@@ -38,7 +38,7 @@ library
   build-depends:
       base              >=4.15 && <4.23
     , lens              >=4.0  && <5.4
-    , smash             >=0.1.4 && <0.2
+    , smash             >=0.2.0 && <0.3
 
   hs-source-dirs:   src
   default-language: Haskell2010
@@ -57,7 +57,7 @@ test-suite smash-lens-tests
     , tasty-hunit       >=0.10 && <0.11
     , tasty-quickcheck  >=0.10 && <0.12
     , QuickCheck        >=2.14 && <2.17
-    , smash
+    , smash             >=0.2.0 && <0.3
     , lens
 
   ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N

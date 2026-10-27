@@ -1,5 +1,10 @@
 # Revision history for smash
 
+## 0.2.0 -- 2026-10-26
+
+* Start the `0.2` major release series with the 2026 compiler support and test suite.
+* Preserve the existing public API and binary representations.
+
 ## 0.1.4 -- 2026-10-26
 
 * Update dependency bounds and the supported GHC matrix to 9.6–9.14.

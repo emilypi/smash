@@ -1,6 +1,6 @@
 cabal-version:      2.0
 name:               smash-microlens
-version:            0.1.0.3
+version:            0.2.0
 synopsis:           Optics for the `smash` library
 description:        Optics for the `smash` library using `microlens`
 homepage:           https://github.com/emilypi/smash
@@ -36,7 +36,7 @@ library
   build-depends:
       base              >=4.15 && <4.23
     , microlens         >=0.3  && <0.6
-    , smash             >=0.1.4 && <0.2
+    , smash             >=0.2.0 && <0.3
 
 
   hs-source-dirs:   src
@@ -56,7 +56,7 @@ test-suite smash-microlens-tests
     , tasty-hunit       >=0.10 && <0.11
     , tasty-quickcheck  >=0.10 && <0.12
     , QuickCheck        >=2.14 && <2.17
-    , smash
+    , smash             >=0.2.0 && <0.3
     , microlens
 
   ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N

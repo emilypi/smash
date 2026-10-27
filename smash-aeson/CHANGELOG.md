@@ -1,5 +1,10 @@
 # Revision history for smash-aeson
 
+## 0.3.0 -- 2026-10-26
+
+* Start the `0.3` major release series and require `smash >=0.2.0 && <0.3`.
+* Preserve the explicit ordinary and lifted JSON wire formats across `aeson` 2.0–2.3.
+
 ## 0.2.0.2 -- 2026-10-26
 
 * Update dependency bounds and the supported GHC matrix to 9.6–9.14.
